@@ -1,11 +1,17 @@
 #include <stdlib.h>
 #include <stdio.h>
+
 #include "pattern.h"
+#include "rule.h"
+#include "hashtable_r.h"
 
 
-void postNormalize(pattern* p, int order, int* value);
-void genRules(int alphMax, int order, int* values);
+
+void postNormalize(pattern* p, int order, int* value, int alph_max);
+void genRules(int alphMax, int order, int* values, hash_table* t, hash_table* states );
 void expand(pattern* p, int order, int* values, int alph_max);
+void outputState(pattern* output, int order, int* value, int max_alph, hash_table* rules);
+void applyRules(hash_table* rules, pattern* p, int order);
 
 // input format :  m [ 1 1 1 ] [ 4 2 1 ]"
 int main(int argc, char *argv[])
@@ -41,34 +47,48 @@ int main(int argc, char *argv[])
 		j++;
 		k++;				
 	}
-	
-	int tab[3] = {1,0,5};	
-	pattern* p = malloc(sizeof(pattern));
-	p->values = &tab;
-	p->size = 3;
-	expand(p, order, values, 2);
-	postNormalize(p, order,values);
-	printPattern(p);
+	hash_table* rules = createhash_table(order*10);
+	hash_table* states = createhash_table(order*10);
+	genRules(1, order, values, rules, states);
+	//printTablePattern(states);
+	//printTableRules(rules);
+/*	
+	d->size = 4;
+	int tab[4] = {0,3,2,2};
+	d->values = &tab;
+	if(getRule(rules, d, hashKey(rules->capacity, d)) == NULL)
+		printf("y'a pass");
 
-	
-	//genRules(1, order, values);
-	/*
-	
-	incPat(p, 1);
-	printPattern(p);
-	pattern** prefixes = getPrefixes(p);
-	
-	for(i = 0; i < p->size-1; i++)
-	{
-		printPattern(prefixes[i]);
-		printPattern(getSuffix(p, prefixes[i]));
-	}
+	applyRules(rules, d, order);
+	printPattern(d);
 	*/
 	
+	for(int i = 0; i < states->capacity; i++)
+	{
+		if(states->tab[i] == NULL)
+			continue;
+		pattern* p;
+		hash_entry* e = states->tab[i];
+		while(e->next != NULL)
+		{
+			p = ((pattern*) e->payload);
+			pattern* o = copyPattern(p);
+			printPattern(o);
+			outputState(o, order, values, 1, rules);
+			printPattern(o);
+			printf(" \n");
+			e = e->next;
+		}
+		printf(" \n");
+	}
+	
+	
+
 }
 
-void genRules(int alphMax, int order, int* values)
+void genRules(int alphMax, int order, int* values, hash_table* t, hash_table* states )
 {
+	
 	int p = alphMax*2 - 2;
 	for(int h = 0; h <= p; h++)
 	{
@@ -88,20 +108,48 @@ void genRules(int alphMax, int order, int* values)
 				left = malloc(sizeof(pattern));
 				left->size = order+1;
 				left->values = malloc((order+1)*sizeof(int));
+				
+				pattern* right;
+				right = malloc(sizeof(pattern));
+				right->size = order+1;
+				right->values = malloc((order+1)*sizeof(int));
+				
 				left->values[0] = h;
+				right->values[0] = h+1;
 				for(int j = 1; j < order; j++)
 				{
-					left->values[j] = p+1+i.values[j-1]; 
+					left->values[j] = p+1+i.values[j-1];
+					right->values[j] = p+i.values[j-1]; 
 				}
 				left->values[order] = l;
-				//printPattern(left);
+				right->values[order] = l-1;
+				
+				rule* new_rule = malloc(sizeof(rule));
+				new_rule->left = left;
+				new_rule->right = right;
+			
+				
+				hash_entry* e = malloc(sizeof(hash_entry));
+				e->payload = new_rule;
+				e->key = hashKey(t->capacity, new_rule->left);
+				e->next = NULL;
+				
+				insertEntry(t,e, e->key);
+				
+				
 				// etats qui en decoulent
 				pattern** prefix_left = getPrefixes(left);
-				/*			
-				printPattern(prefix_left[1]);
-				postNormalize(prefix_left[1], order, values);
-				printPattern(prefix_left[1]);
-				*/
+				for(int n = 0; n < left->size-1; n++)
+				{
+					// collisions et unicite !!
+					hash_entry* entry = malloc(sizeof(hash_entry));
+					entry->payload = prefix_left[n];
+					entry->key = hashKey(states->capacity, prefix_left[n]);
+					entry->next = NULL;
+					if(! existPattern(states,prefix_left[n], entry->key ))
+						insertEntry(states, entry, entry->key );
+				}
+				
 			}
 			
 			for(int j = 1; j < order; j++) 
@@ -139,46 +187,68 @@ void genRules(int alphMax, int order, int* values)
 						pattern* left2 = malloc(sizeof(pattern));
 						left2->size = order+j+1;
 						left2->values = malloc((order+j+1)*sizeof(int));
+						
+						pattern* right2 = malloc(sizeof(pattern));
+						right2->size = order+j+1;
+						right2->values = malloc((order+j+1)*sizeof(int));
+						
 						left2->values[0] = h;
+						right2->values[0] = h+1;
 						
 						for(int k = 0; k < iprime->size; k++)
 						{
 							left2->values[k+1]= p+iprime->values[k]+1;
+							right2->values[k+1]= p+iprime->values[k];
+							if(k == j-1)
+							{
+								right2->values[k+1]--;
+							}
 						}
 						for(int k = 0; k < nu->size; k++) 
 						{
-							left2->values[j+k+1] = nu->values[k];	
+							left2->values[j+k+1] = nu->values[k];
+							right2->values[j+k+1] = nu->values[k];
+							if(k >= order-j)
+							{
+								right2->values[j+k+1]++;
+							}	
 						}
-						printPattern(left2);
+						
+						rule* new_rule2 = malloc(sizeof(rule));
+						new_rule2->left = left2;
+						new_rule2->right = right2;
+						
+						hash_entry* e = malloc(sizeof(hash_entry));
+						e->payload = new_rule2;
+						e->key = hashKey(t->capacity, new_rule2->left);
+						e->next = NULL;
+				
+						insertEntry(t, e, e->key);
+										
 						
 						pattern** prefixes_st = getPrefixes(left2);
+						
 						for(int k = 0; k < left2-> size-1; k++)
 						{
-							printf("State : ");
-							printPattern(prefixes_st[k]);
-							pattern* suffix;
-							if(prefixes_st[k]->size > order)
-								suffix = getSuffix(prefixes_st[k],subPattern(prefixes_st[k], prefixes_st[k]->size-order) );
-							else {
-								suffix = prefixes_st[k];
-							}
-							printPattern(suffix);
-							postNormalize(suffix, order, values);
-							printPattern(suffix);
+							hash_entry* entry = malloc(sizeof(hash_entry));
+							entry->payload = prefixes_st[k];
+							entry->key = hashKey(states->capacity, prefixes_st[k]);
+							entry->next = NULL;
+							if(!existPattern(states, prefixes_st[k], entry->key))
+								insertEntry(states, entry, entry->key);
 							
 						}
-												
+										
 						
 					}while(incPat(nu, p+2) == 0);
 				} 
 			}
 		}while(incPat(&i, 2) == 0);
 	}
-		
 	
 }
 
-void postNormalize(pattern* p, int order, int* value)
+void postNormalize(pattern* p, int order, int* value, int max_alph)
 {
 	int size_pat = p->size;
 	if(p->size > order)
@@ -195,6 +265,9 @@ void postNormalize(pattern* p, int order, int* value)
 			max = p->values[i];
 	}
 	
+	if(max <= max_alph)
+		return;
+	
 	int val = 0;
 	int j = p->size-1;
 	i = order - 1;
@@ -204,7 +277,13 @@ void postNormalize(pattern* p, int order, int* value)
 		i--;
 		j--;
 	}
-
+	// If the pattern is for example "03201" for order 3, we want to expand the 2
+	if(p->size > order )
+	{
+		pattern* suff = getSuffix(p, subPattern(p, p->size - order));
+		max = getMax(suff);
+	}	
+	
 	int r = val;
 	int max_rep = 0;
 	for(int i = 0; i < order; i++)
@@ -216,7 +295,9 @@ void postNormalize(pattern* p, int order, int* value)
 		expand(p, order, value, max);
 		return;
 	}
-		
+	
+	
+	
 
 	int* normalized = malloc((order)*sizeof(int));
 	if(normalized == NULL)
@@ -297,9 +378,44 @@ void expand(pattern* p, int order, int* values, int alph_max)
 			
 		}
 		
-			
 	}
-	printPattern(p);
+}
+
+void applyRules(hash_table* rules, pattern* p, int order)
+{
+	// need to generate prefixes of size m-2m-1
+	for(int i = order; i < 2*order && i <= p->size; i++)
+	{
+		pattern* sub = subPattern(p, i);
+		int key = hashKey(rules->capacity, sub );
+		rule* r = getRule(rules, sub, key);
+		if(r != NULL)
+		{
+			sub = r->right;
+			for(int j = 0; j < sub->size; j++)
+			{
+				p->values[j] = sub->values[j];
+			}
+			return;
+		}
+	}
+	
+	
+}
+
+
+void outputState(pattern* output, int order, int* value, int max_alph, hash_table* rules)
+{
+	int max = getMax(output);
+	if(max <= max_alph)
+		return;
+	
+	postNormalize(output, order, value, max_alph);
+	applyRules(rules, output, order);
+	
+	if(getMax(output) < max)
+		return;
+	outputState(output, order, value, max_alph, rules);
 }
 
 

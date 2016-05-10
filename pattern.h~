@@ -1,3 +1,6 @@
+#ifndef _PATTERN
+#define _PATTERN
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -7,86 +10,18 @@ typedef struct pattern
 	int size;
 }pattern;
 
-int incPat(pattern* p, int alph_max)
-{
-		for(int i = p->size-1; i >= 0; i--)
-		{
-			if(p->values[i] < alph_max)
-			{
-				p->values[i]++;
-				return 0;
-			}
-		}
-		return 1;
-}
+int incPat(pattern* p, int alph_max);
 
-int compLexPat(pattern* p, pattern* o)
-{
-	
-}
+int compLexPat(pattern* p, pattern* o);
 
-pattern* subPattern(pattern* p, int size)
-{
-	if(size >= p-> size)
-		return p;
-	pattern* res = malloc(sizeof(pattern));
-	res->size = size;
-	res->values = malloc(size*sizeof(int));
-	for(int i = 0; i < size; i++)
-	{
-		res->values[i] = p->values[i]; 
-	}
-	return res;
-}
+pattern* subPattern(pattern* p, int size);
 
-pattern** getPrefixes(pattern* p)
-{
-	pattern** result = malloc(p->size*sizeof(pattern*));
-	if(result == NULL)
-		return NULL;
-	int i = 0; 
-	while(i < p->size - 1) 
-	{
-		result[i] = malloc(sizeof(pattern));
-		if(result[i] == NULL)
-			return NULL;
-			
-		result[i]->size = i+1;
-		result[i]->values = malloc((i+1)*sizeof(int));
-		int j = 0;
-		for(;j <= i; j++)
-		{
-			result[i]->values[j] = p->values[j];
-		}
-		i++;
-	}	
-	return result;
+pattern** getPrefixes(pattern* p);
 
-}
+pattern* getSuffix(pattern* p, pattern* prefix);
 
-pattern* getSuffix(pattern* p, pattern* prefix)
-{
-	int j = prefix->size;
-	pattern* result = malloc(sizeof(pattern));
-	result->values = malloc((p->size - prefix->size)*sizeof(int));
-	result->size = p->size - prefix->size;
-	int i = 0;
-	while(j < p->size)
-	{
-		result->values[i] = p->values[j];
-		j++;
-		i++;
-	}
-	return result;
-}
+void printPattern(pattern* p);
 
-void printPattern(pattern* p)
-{
-	int i = 0; 
-	printf("Pattern : ");
-	for(;i < p->size; i++)
-	{
-		printf("%i",p->values[i]);
-	}
-	printf("\n");
-}
+pattern* copyPattern(pattern* p);
+
+#endif
