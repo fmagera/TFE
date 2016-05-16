@@ -38,6 +38,8 @@ void printTableRules(hash_table* t);
 
 void printTablePattern(hash_table* t);
 
+void printTableTransitions(hash_table* t);
+
 bool existPattern(hash_table* t, pattern* p, int key);
 
 rule* getRule(hash_table *t, pattern* p, int key);

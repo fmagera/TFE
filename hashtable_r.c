@@ -147,4 +147,26 @@ void printTablePattern(hash_table* t)
 	}
 }
 
+void printTableTransitions(hash_table* t)
+{
+	for(int i = 0; i < t->capacity; i++)
+	{
+		if(t->tab[i] != NULL)
+		{
+			transition* p = ((transition*) t->tab[i]->payload);
+			printf("Transition %i :",  i);
+			printTransition(p);
+			hash_entry* e = t->tab[i];
+			
+			while(e->next != NULL)
+			{
+				e = e->next;
+				p = ((transition*) e->payload);
+				printf("Transition %i :",  i);
+				printTransition(p);
+			}
+		}
+	}
+}
+
 

@@ -139,7 +139,7 @@ void printTablePattern(hash_table* t)
 			while(e->next != NULL)
 			{
 				e = e->next;
-				p = ((pattern*) e->payload)
+				p = ((pattern*) e->payload);
 				printf("Pattern %i :",  i);
 				printPattern(p);
 			}
