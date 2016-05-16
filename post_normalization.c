@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 	
 	//printTablePattern(states);
 	//printTableRules(rules);	
-/*
+
 	for(int i = 0; i < states->capacity; i++)
 	{
 		if(states->tab[i] == NULL)
@@ -69,11 +69,11 @@ int main(int argc, char *argv[])
 	}
 	printTableTransitions(transitions);
 	//printTableRules(rules);
-	*/
+	/*
 	pattern* d = malloc(sizeof(pattern));
-	int tab[3] = {0,3, 2};
+	int tab[2] = {0,3};
 	d->values = tab;
-	d->size = 3;
+	d->size = 2;
 	rule* r = getRule(rules, d, hashKey(rules->capacity, d));
 	if(r == NULL)
 		printf("WTF \n");
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 		printRule(r);
 	genTransitions(states,rules, transitions, alph_max, order, d);
 	printTableTransitions(transitions);
-	/*
+	
 	printf("%i %i \n", rules->numberofelements, states->numberofelements);
 	int curr = 0;
 	for(int i = 0; i < states->capacity; i++)
@@ -160,9 +160,22 @@ void genRules(int alphMax, int order, int* values, hash_table* t, hash_table* st
 				left->values[order] = l;
 				right->values[order] = l-1;
 				
+				int ret = getMin(subPattern(left, 1, left->size -1));
+				if(ret > 1)
+				{
+					right->values[0] += (ret-1);
+					for(int j = 1; j < right->size; j++)
+					{
+						right->values[j] -= (ret-1);
+					}
+					
+				}				
+				
 				rule* new_rule = malloc(sizeof(rule));
 				new_rule->left = left;
 				new_rule->right = right;
+				
+				
 			
 				
 				hash_entry* e = malloc(sizeof(hash_entry));
@@ -426,6 +439,7 @@ void genTransitions(hash_table* states, hash_table* rules, hash_table* transitio
 		}
 		else
 		{
+			printRule(r);
 			pattern* next = r->right;
 			pattern** suffixes = getSuffixes(next);
 			bool done = false;

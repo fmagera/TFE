@@ -32,6 +32,8 @@ pattern* copyPattern(pattern* p);
 
 int getMax(pattern* p);
 
+int getMin(pattern* p);
+
 typedef struct transition
 {
 	pattern* st_state;
