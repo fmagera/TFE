@@ -6,43 +6,46 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "rule.h"
 #include "pattern.h"
 
-typedef struct _hash_entry{
-  struct _hash_entry *next;
+typedef struct _hash_en{
+  struct _hash_en *next;
   void               *payload;
   int key; 
-} hash_entry;
+} hash_en;
 
 typedef struct {
   int       capacity;
   int numberofelements;
-  hash_entry **tab;
-} hash_table;
+  hash_en **tab;
+} hash_tab;
 
 
-hash_table* createhash_table(int capacity);
+hash_tab* createhash_tab(int capacity);
 
-void freehash_table(hash_table* hashTable);
+void freehash_tab(hash_tab* hashTable);
 
-int insertEntry(hash_table* hashTable, hash_entry* r, int key);
+int insertEntry(hash_tab* hashTable, hash_en* r, int key);
 
-size_t getNumRules(const hash_table* t);
+size_t getNumRules(const hash_tab* t);
 
-bool hasKey(const hash_table* t, const int key);
+bool hasKey(const hash_tab* t, const int key);
 
 int hashKey(size_t capacity, pattern* p);
 
-void printTableRules(hash_table* t);
+void printTableRules(const hash_tab* t);
 
-void printTablePattern(hash_table* t);
+void printTableStates(const hash_tab* t);
 
-void printTableTransitions(hash_table* t);
+void printTablePattern(const hash_tab* t);
 
-bool existPattern(hash_table* t, pattern* p, int key);
+void printTableTransitions(const hash_tab* t);
 
-rule* getRule(hash_table *t, pattern* p, int key);
+bool existState(const hash_tab* t,const  pattern* p,const  int key);
+
+const rule* getRule(const hash_tab *t,const  pattern* p,const  int key);
+
+const statef* getState(const hash_tab *t,const  pattern* p,const  int key);
 
 
 #endif

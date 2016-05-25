@@ -167,6 +167,17 @@ int getMax(pattern* p)
 	return max;
 }
 
+int getMin(pattern* p)
+{
+	int min = p->values[0];
+	for(int i = 1; i < p->size; i++ )
+	{
+		if(p->values[i] < min)
+			min = p->values[i];
+	}
+	return min;
+}
+
 void printPattern(pattern* p)
 {
 	int i = 0; 

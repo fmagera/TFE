@@ -10,29 +10,47 @@ typedef struct pattern
 	int size;
 }pattern;
 
-int incPat(pattern* p, int alph_max);
+typedef struct statef
+{
+	pattern* label;
+	pattern* output;
+	int nb;
+}statef;
 
-pattern* append(pattern* p, int i);
+int incPat(pattern* p, const int alph_max);
 
-int compLexPat(pattern* p, pattern* o);
+pattern* append(const pattern* p, const int i);
 
-pattern* subPattern(pattern* p, int start, int end);
+int compLexPat(const pattern* p, const pattern* o);
 
-pattern** getPrefixes(pattern* p);
+pattern* subPattern(const pattern* p, const int start,const  int end);
 
-pattern** getSuffixes(pattern* p);
+pattern** getPrefixes(const pattern* p);
 
-pattern* getPrefix(pattern* p, int sizeOfSuffix);
+pattern** getSuffixes(const pattern* p);
 
-pattern* getSuffix(pattern* p, pattern* prefix);
+pattern* getPrefix(const pattern* p, const int sizeOfSuffix);
 
-void printPattern(pattern* p);
+pattern* getSuffix(const pattern* p, const pattern* prefix);
 
-pattern* copyPattern(pattern* p);
+void printPattern(const pattern* p);
 
-int getMax(pattern* p);
+pattern* copyPattern(const pattern* p);
 
-int getMin(pattern* p);
+int getMax(const pattern* p);
+
+int getMin(const pattern* p);
+
+typedef struct rule
+{
+	pattern* left;
+	pattern* right;
+}rule;
+
+void printRule(const rule* r);
+
+rule* createRule(pattern* l, pattern* r);
+
 
 typedef struct transition
 {
@@ -42,6 +60,6 @@ typedef struct transition
 	pattern* output;
 }transition;
 
-void printTransition(transition* t);
+void printTransition(const transition* t);
 
 #endif

@@ -15,13 +15,13 @@ int hashKey(size_t capacity,pattern* key)
 
 
 
-hash_table* createhash_table(int capacity)
+hash_tab* createhash_tab(int capacity)
 {
 
-    hash_table* table = malloc(sizeof(hash_table));
+    hash_tab* table = malloc(sizeof(hash_tab));
     table->capacity = capacity;
     table->numberofelements = 0;
-    table->tab = malloc(capacity*sizeof(hash_entry*));
+    table->tab = malloc(capacity*sizeof(hash_en*));
     
 
     for(int i = 0; i < capacity ; i++)
@@ -32,58 +32,68 @@ hash_table* createhash_table(int capacity)
 }
 
 
-void freehash_table(hash_table* hashtable)
+void freehash_tab(hash_tab* hashtable)
 {
     hashtable->numberofelements = 0;
     free(hashtable->tab);
 }
 
-int insertEntry(hash_table* hashtable, hash_entry* e, int key)
+int insertEntry(hash_tab* hashtable, hash_en* e, int key)
 {
    hashtable->numberofelements++;
    if(hasKey(hashtable, key))
    {
-   	// add an element to the linked list
-   	e->next = hashtable->tab[key];
-   	hashtable->tab[key] = e;
+	   	// add an element to the linked list
+	   	e->next = hashtable->tab[key];
+	   	hashtable->tab[key] = e;
    }
    else
    {
-   	hashtable->tab[key] = e;
-   	e->next = NULL;
+	   	hashtable->tab[key] = e;
+	   	e->next = NULL;
    }
    return key;
 }
 
 
-size_t getNumRules(const hash_table* hashTable)
+size_t getNumRules(const hash_tab* hashTable)
 {
     return hashTable->numberofelements;
 }
 
-bool hasKey(const hash_table* hashtable, const int key)
+bool hasKey(const hash_tab* hashtable, const int key)
 {
 	return (hashtable->tab[key] != NULL);
 }
 
-bool existPattern(hash_table* t, pattern* p, int key)
+bool existState(const hash_tab* t, const pattern* p, const int key)
 {
-	hash_entry* e = t->tab[key];
+	hash_en* e = t->tab[key];
 	if(e == NULL)
 		return false;
+	statef* s =  ((statef*) e->payload);
+	if(s == NULL)
+		return false;
+	pattern* o = s->label;
+	if(compLexPat(o,p) == 0)
+			return true;
 	while(e->next != NULL)
 	{
-		pattern* o = ((pattern*) e->payload);
+		e = e->next;
+		s = ((statef*) e->payload);
+		if( s == NULL)
+			return false;
+		o = s->label;
 		if(compLexPat(o,p) == 0)
 			return true;
-		e = e->next;
+		
 	}
 	return false;
 }
 
-rule* getRule(hash_table *t, pattern* p, int key)
+const rule* getRule(const hash_tab *t, const pattern* p, const int key)
 {
-	hash_entry* e = t->tab[key];
+	hash_en* e = t->tab[key];
 	if(e == NULL)
 		return NULL;
 	rule* r = ((rule*) e->payload);
@@ -103,7 +113,29 @@ rule* getRule(hash_table *t, pattern* p, int key)
 	return NULL;
 }
 
-void printTableRules(hash_table* t)
+const statef* getState(const hash_tab *t, const pattern* p, const int key)
+{
+	hash_en* e = t->tab[key];
+	if(e == NULL)
+		return NULL;
+	statef* r = ((statef*) e->payload);
+	pattern* o = (r->label);
+	if(compLexPat(o,p) == 0)
+			return r;
+
+	while(e->next != NULL)
+	{
+		e = e->next;
+		r = ((statef*) e->payload);
+		o = (r->label);
+		if(compLexPat(o,p) == 0)
+			return r;
+		
+	}
+	return NULL;
+}
+
+void printTableRules(const hash_tab* t)
 {
 	for(int i = 0; i < t->capacity; i++)
 	{
@@ -112,7 +144,7 @@ void printTableRules(hash_table* t)
 			rule* r = ((rule*) t->tab[i]->payload);
 			printf("Rule %i :",  i);
 			printRule(r);
-			hash_entry* e = t->tab[i];
+			hash_en* e = t->tab[i];
 			
 			while(e->next != NULL)
 			{
@@ -125,7 +157,7 @@ void printTableRules(hash_table* t)
 	}
 }
 
-void printTablePattern(hash_table* t)
+void printTablePattern(const hash_tab* t)
 {
 	for(int i = 0; i < t->capacity; i++)
 	{
@@ -134,7 +166,7 @@ void printTablePattern(hash_table* t)
 			pattern* p = ((pattern*) t->tab[i]->payload);
 			printf("Pattern %i :",  i);
 			printPattern(p);
-			hash_entry* e = t->tab[i];
+			hash_en* e = t->tab[i];
 			
 			while(e->next != NULL)
 			{
@@ -147,7 +179,39 @@ void printTablePattern(hash_table* t)
 	}
 }
 
-void printTableTransitions(hash_table* t)
+void printTableStates(const hash_tab* t)
+{
+	for(int i = 0; i < t->capacity; i++)
+	{
+		if(t->tab[i] != NULL)
+		{
+			statef* p = ((statef*) t->tab[i]->payload);
+			printf("State %i :",  i);
+			printPattern(p->label);
+			if(p->output != NULL)
+			{
+				printf("\t ");
+				printPattern(p->output);
+			}
+			hash_en* e = t->tab[i];
+			
+			while(e->next != NULL)
+			{
+				e = e->next;
+				p = ((statef*) e->payload);
+				printf("State %i :",  i);
+				printPattern(p->label);
+				if(p->output != NULL)
+				{
+					printf("\t ");
+					printPattern(p->output);
+				}
+			}
+		}
+	}
+}
+
+void printTableTransitions(const hash_tab* t)
 {
 	for(int i = 0; i < t->capacity; i++)
 	{
@@ -156,7 +220,7 @@ void printTableTransitions(hash_table* t)
 			transition* p = ((transition*) t->tab[i]->payload);
 			printf("Transition %i :",  i);
 			printTransition(p);
-			hash_entry* e = t->tab[i];
+			hash_en* e = t->tab[i];
 			
 			while(e->next != NULL)
 			{

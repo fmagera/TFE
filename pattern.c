@@ -1,7 +1,7 @@
 #include "pattern.h"
 
 
-int incPat(pattern* p, int alph_max)
+int incPat(pattern* p, const int alph_max)
 {
 		for(int i = p->size-1; i >= 0; i--)
 		{
@@ -19,18 +19,25 @@ int incPat(pattern* p, int alph_max)
 		return 1;
 }
 
-pattern* append(pattern* p, int i)
+pattern* append( const pattern* p, const int i)
 {
 	pattern* copy = copyPattern(p);
 	copy->size++;
-	realloc(copy->values, copy->size);
-	if(copy->values == NULL)
-		return NULL;
+	int* more_values = realloc(copy->values, copy->size);
+
+	if(more_values != NULL)
+		copy->values = more_values;
+	else
+	{
+		free(copy->values);
+		free(copy);
+	}
+
 	copy->values[copy->size -1] = i; 
 	return copy;
 }
 
-int compLexPat(pattern* p, pattern* o)
+int compLexPat(const pattern* p, const pattern* o)
 {
 	int m = o->size;
 	if(p->size < o->size)
@@ -48,23 +55,26 @@ int compLexPat(pattern* p, pattern* o)
 	else return (p->size < o->size)? 1:-1;
 }
 
-pattern* subPattern(pattern* p, int start, int end)
+pattern* subPattern(const pattern* p, const int start, const int end)
 {
 	if(end >= p->size || start >= p->size)
 		return p;
 	pattern* res = malloc(sizeof(pattern));
 	res->size = end-start + 1;
 	res->values = malloc(res->size*sizeof(int));
-	for(int i = start, j = 0; i <= end, j < res->size; i++, j++)
+	for(int i = start, j = 0; j < res->size; i++, j++)
 	{
 		res->values[j] = p->values[i]; 
 	}
 	return res;
 }
 
-pattern** getPrefixes(pattern* p)
+pattern** getPrefixes( const pattern* p)
 {
-	pattern** result = malloc(p->size*sizeof(pattern*));
+	if(p->size <= 1)
+		return NULL;
+
+	pattern** result = malloc((p->size-1)*sizeof(pattern*));
 	if(result == NULL)
 		return NULL;
 	int i = 0; 
@@ -87,9 +97,15 @@ pattern** getPrefixes(pattern* p)
 
 }
 
-pattern** getSuffixes(pattern* p)
+pattern** getSuffixes(const pattern* p)
 {
-	pattern** result = malloc(p->size*sizeof(pattern*));
+	if(p->size <= 1)
+		return NULL;
+
+	pattern** result = malloc((p->size-1)*sizeof(pattern*));
+	if(result == NULL)
+		printf("souci \n");
+
 	if(result == NULL)
 		return NULL;
 	int i = 0; 
@@ -107,12 +123,13 @@ pattern** getSuffixes(pattern* p)
 			result[i]->values[j] = p->values[j+start];
 		}
 		i++;
+
 	}	
 	return result;
 
 }
 
-pattern* getPrefix(pattern* p, int sizeOfSuffix)
+pattern* getPrefix(const pattern* p, const int sizeOfSuffix)
 {
 	int end = p->size - sizeOfSuffix;
 	pattern* result = malloc(sizeof(pattern));
@@ -127,7 +144,7 @@ pattern* getPrefix(pattern* p, int sizeOfSuffix)
 	return result;
 }
 
-pattern* getSuffix(pattern* p, pattern* prefix)
+pattern* getSuffix(const pattern* p, const pattern* prefix)
 {
 	int j = prefix->size;
 	pattern* result = malloc(sizeof(pattern));
@@ -143,7 +160,7 @@ pattern* getSuffix(pattern* p, pattern* prefix)
 	return result;
 }
 
-pattern* copyPattern(pattern* p)
+pattern* copyPattern(const pattern* p)
 {
 	pattern* copy = malloc(sizeof(pattern));
 	
@@ -156,7 +173,7 @@ pattern* copyPattern(pattern* p)
 	return copy;
 }
 
-int getMax(pattern* p)
+int getMax(const pattern* p)
 {
 	int max = 0;
 	for(int i = 0; i < p->size; i++ )
@@ -167,7 +184,7 @@ int getMax(pattern* p)
 	return max;
 }
 
-int getMin(pattern* p)
+int getMin(const pattern* p)
 {
 	int min = p->values[0];
 	for(int i = 1; i < p->size; i++ )
@@ -178,7 +195,7 @@ int getMin(pattern* p)
 	return min;
 }
 
-void printPattern(pattern* p)
+void printPattern(const pattern* p)
 {
 	int i = 0; 
 	printf("Pattern : ");
@@ -189,7 +206,7 @@ void printPattern(pattern* p)
 	printf("\n");
 }
 
-void printTransition(transition* t)
+void printTransition(const transition* t)
 {
 	printf("From ");
 	printPattern(t->st_state);
@@ -202,5 +219,24 @@ void printTransition(transition* t)
 	printf("\n");
 	
 }
+
+
+void printRule(const rule* r)
+{
+	printf("Rule : \n");
+	printPattern(r->left);
+	printf("to :");
+	printPattern(r->right);
+}
+
+rule* createRule(pattern* l, pattern* r)
+{
+	rule* new_rule = malloc(sizeof(rule));
+	new_rule->left = l; 
+	new_rule->right = r;
+	return new_rule;
+}
+
+
 
 
