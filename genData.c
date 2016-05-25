@@ -3,7 +3,8 @@
 void genData(const int order, const int alph_max, const int* values, hash_tab* rules, hash_tab* states, hash_tab* transitions)
 {
 	genRules(alph_max, order, values, rules, states);
-	printTableRules(rules);
+	//printTableRules(rules);
+	//printTableStates(states);
 
 	for(int i = 0; i < states->capacity; i++)
 	{
@@ -13,9 +14,7 @@ void genData(const int order, const int alph_max, const int* values, hash_tab* r
 		hash_en* e = states->tab[i];
 		p = ((statef*) e->payload);
 		pattern* s = p->label;
-		printPattern(s);
 		
-		printf("bef gentransitions %i \n", s->size);
 
 		genTransitions(states, rules, transitions, alph_max, order, s);
 		while(e->next != NULL)
@@ -30,6 +29,7 @@ void genData(const int order, const int alph_max, const int* values, hash_tab* r
 
 	}
 	printTableTransitions(transitions);
+	
 	for(int i = 0; i < states->capacity; i++)
 	{
 		if(states->tab[i] == NULL)
@@ -163,7 +163,12 @@ void genRules(const int alphMax,const int order, const int* values, hash_tab* t,
 						tocomp->values[order-j-1] = 1;
 
 						if(compLexPat(nuprime, tocomp) <= 0)
+						{
+							free(nuprime);
+							freePattern(tocomp);
 							continue;
+						}
+						freePattern(tocomp);
 						
 						pattern* left2 = malloc(sizeof(pattern));
 						left2->size = order+j+1;
@@ -224,12 +229,15 @@ void genRules(const int alphMax,const int order, const int* values, hash_tab* t,
 								insertEntry(states, entry, entry->key);
 							
 						}
-										
+						freePattern(nuprime);				
 						
 					}while(incPat(nu, p+2) == 0);
-				} 
+					freePattern(nu);
+				}
+				freePattern(iprime); 
 			}
 		}while(incPat(&i, 2) == 0);
+		free(i.values);
 	}
 	
 }
@@ -305,8 +313,10 @@ int applyRules( const hash_tab* rules, pattern* p, const int order)
 					{
 						p->values[j+k] = sub->values[k];
 					}
+					freePattern(sub);
 					return 1;
 				}
+				freePattern(sub);
 			}
 		}
 	}	
@@ -338,6 +348,7 @@ void genTransitions(const hash_tab* states, const hash_tab* rules, hash_tab* tra
 	for(int i = 0; i <= alph_max*2; i ++)
 	{
 		pattern* current = append(stat, i);
+
 		printPattern(current);
 		rule *r = getRule(rules, current, hashKey(rules->capacity, current));
 		if(r == NULL)
@@ -349,8 +360,8 @@ void genTransitions(const hash_tab* states, const hash_tab* rules, hash_tab* tra
 							printf("Case 1  transi ? \n");
 				statef* s = getState(states, current, hashKey(states->capacity, current));
 
-				t->st_state = stat;
-				t->en_state = s->label;
+				t->st_state = copyPattern(stat);
+				t->en_state = copyPattern(s->label);
 				t->input = i;
 				t->output = NULL;
 				
@@ -367,8 +378,7 @@ void genTransitions(const hash_tab* states, const hash_tab* rules, hash_tab* tra
 				printf("Case 2 \n");
 				printPattern(current);
 				pattern** suffixes = getSuffixes(current);
-				printPattern(suffixes[current->size-2]);
-				printPattern(getPrefix(current, suffixes[current->size-2]->size));
+
 				for(int j = current->size-2; j >= 0; j--)
 				{
 					pattern* out = getPrefix(current, suffixes[j]->size);
@@ -376,24 +386,25 @@ void genTransitions(const hash_tab* states, const hash_tab* rules, hash_tab* tra
 					{
 						transition* t = malloc(sizeof(transition));
 						pattern* copy = copyPattern(suffixes[j]);
-						t->st_state = stat;
+						t->st_state = copyPattern(stat);
 						t->en_state = copy;
 						t->input = i;
-						t->output = out;
+						t->output = copyPattern(out);
 				
 						hash_en* e = malloc(sizeof(hash_en));
 						e->payload = t;
 						e->key = hashKey(transitions->capacity, stat);
 						e->next = NULL;
 						insertEntry(transitions, e, e->key);
+						freePattern(out);
 						break;
 					}
+					freePattern(out);
 				}
 
 				for(int j = current->size - 2; j >= 0 ; j-- )
 				{
-					free(suffixes[j]->values);
-					free(suffixes[j]);
+					freePattern(suffixes[j]);
 				}
 				free(suffixes);
 			}
@@ -401,9 +412,6 @@ void genTransitions(const hash_tab* states, const hash_tab* rules, hash_tab* tra
 		else
 		{
 			pattern* next = r->right;
-			printPattern(current);
-			printRule(r);
-
 			pattern** suffixes = getSuffixes(next);
 							printf("Case 3 \n");
 
@@ -417,10 +425,10 @@ void genTransitions(const hash_tab* states, const hash_tab* rules, hash_tab* tra
 				{
 						pattern* copy = copyPattern(suffixes[j]);
 						transition* t = malloc(sizeof(transition));
-						t->st_state = stat;
+						t->st_state = copyPattern(stat);
 						t->en_state = copy;
 						t->input = i;
-						t->output = out;
+						t->output = copyPattern(out);
 				
 						hash_en* e = malloc(sizeof(hash_en));
 						e->payload = t;
@@ -429,11 +437,11 @@ void genTransitions(const hash_tab* states, const hash_tab* rules, hash_tab* tra
 						insertEntry(transitions, e, e->key);
 						done = true;
 				}
+				freePattern(out);
 			}
 			for(int j = next->size - 2; j >= 0; j-- )
 			{
-				free(suffixes[j]->values);
-				free(suffixes[j]);
+				freePattern(suffixes[j]);
 			}
 			free(suffixes);
 			if(!done)
@@ -442,8 +450,8 @@ void genTransitions(const hash_tab* states, const hash_tab* rules, hash_tab* tra
 				if(existState(states, next,hashKey(states->capacity, next) ))
 				{
 					transition* t = malloc(sizeof(transition));
-					t->st_state = stat;
-					t->en_state = next;
+					t->st_state = copyPattern(stat);
+					t->en_state = copyPattern(next);
 					t->input = i;
 					t->output = NULL;
 				
@@ -457,8 +465,7 @@ void genTransitions(const hash_tab* states, const hash_tab* rules, hash_tab* tra
 			}
 
 		}
-		free(current->values);
-		free(current);
+		freePattern(current);
 	}
 }
 

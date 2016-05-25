@@ -1,5 +1,43 @@
 #include "pattern.h"
 
+void freePattern(pattern* p)
+{
+	if(p == NULL)
+		return;
+	free(p->values);
+	free(p);
+}
+void freeRule(rule* r)
+{
+	if(r == NULL)
+		return;
+
+	freePattern(r->left);
+	freePattern(r->right);
+	free(r);
+}
+void freeTransition(transition* t)
+{
+	if(t == NULL)
+		return;
+	if(t->st_state != NULL)
+		freePattern(t->st_state);
+	if(t->en_state != NULL)
+		freePattern(t->en_state);
+	
+	freePattern(t->output);
+	free(t);
+}
+
+void freeStatef(statef* s)
+{
+	if(s == NULL)
+		return;
+
+	freePattern(s->label);
+	freePattern(s->output);
+	free(s);
+}
 
 int incPat(pattern* p, const int alph_max)
 {
@@ -23,15 +61,13 @@ pattern* append( const pattern* p, const int i)
 {
 	pattern* copy = copyPattern(p);
 	copy->size++;
-	int* more_values = realloc(copy->values, copy->size);
-
-	if(more_values != NULL)
-		copy->values = more_values;
-	else
+	copy->values = (int*) realloc(copy->values, copy->size*sizeof(int));
+	if(copy->values == NULL)
 	{
-		free(copy->values);
-		free(copy);
+		return NULL;
 	}
+		
+	
 
 	copy->values[copy->size -1] = i; 
 	return copy;

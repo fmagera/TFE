@@ -36,6 +36,7 @@ void freehash_tab(hash_tab* hashtable)
 {
     hashtable->numberofelements = 0;
     free(hashtable->tab);
+    free(hashtable);
 }
 
 int insertEntry(hash_tab* hashtable, hash_en* e, int key)

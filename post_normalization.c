@@ -6,6 +6,7 @@
 #include "lash-diag.h"
 #include "lash-auto.h"
 #include "auto-io-print.h"
+
 #include "pattern.h"
 #include "hashtable_r.h"
 #include "genData.h"
@@ -45,12 +46,17 @@ int main(int argc, char *argv[])
 		j++;
 		k++;				
 	}
+
+	int order = 2;
+	int alph_max = 1;
+	int values[2] = {2,1};
+
 	hash_tab* rules = createhash_tab(pow(10,order+2));
 	hash_tab* states = createhash_tab(pow(10,order));
 	hash_tab* transitions = createhash_tab(pow(10,order)*alph_max);
 
 	genData(order, alph_max, values, rules, states, transitions);
-/*
+
 	if (lash_init() < 0)
     lash_perror("lash_init");
 
@@ -90,7 +96,7 @@ int main(int argc, char *argv[])
 	uint1 l = 0;
 	if(auto_add_new_transition(aut, p, q, 1, &l))
 	  		lash_perror("transition creation");
-	
+	*/
 	auto_print(aut);
 
 	auto_free(aut);	
@@ -102,7 +108,35 @@ int main(int argc, char *argv[])
 	printf("residual memory : %llu byte(s).\n", lash_get_mem_usage());
 	printf("max memory      : %llu byte(s).\n", lash_get_max_mem_usage());
 	printf("### end of the test ###\n");   
-*/
+*
+	for(int i = 0; i < states->capacity; i++)
+	{
+		if(states->tab[i] != NULL)
+		{
+			freeStatef(states->tab[i]->payload);
+		}
+	}
+	freehash_tab(states);
+
+	for(int i = 0; i < rules->capacity; i++)
+	{
+		if(rules->tab[i] != NULL)
+		{
+			freeRule(rules->tab[i]->payload);
+		}
+	}
+	freehash_tab(rules);
+
+	for(int i = 0; i < transitions->capacity; i++)
+	{
+		if(transitions->tab[i] != NULL)
+		{
+			freeTransition(transitions->tab[i]->payload);
+		}
+	}
+	freehash_tab(transitions);
+
+
 	exit(0);
 
 }
