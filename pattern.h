@@ -62,6 +62,8 @@ typedef struct transition
 
 void printTransition(const transition* t);
 
+void printStatef(statef* s);
+
 
 void freePattern(pattern* p);
 void freeRule(rule* r);

@@ -242,6 +242,12 @@ void printPattern(const pattern* p)
 	printf("\n");
 }
 
+void printStatef(statef* s)
+{
+	printf("State : ");
+	printPattern(s->label);
+}
+
 void printTransition(const transition* t)
 {
 	printf("From ");
