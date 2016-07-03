@@ -1,6 +1,9 @@
-#define TEST_AUTO
+//#define TEST_AUTO
 //#define TEST_COMPO
-#define TEST_TEST_AUTO
+//#define TEST_TEST_AUTO
+//#define TEST_ADD
+
+#define END_NOR
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -24,6 +27,8 @@
 #include "genData.h"
 #include "composition.h"
 #include "test_auto.h"
+#include "addition.h"
+#include "end_normalize.h"
 
 
 uint1* concat(int in, uint1* output, int sizeOut, int order);
@@ -98,7 +103,7 @@ int main(int argc, char *argv[])
 	automaton* base = auto_product_union(a1, a2);
 	auto_minimize(base);
 	
-	#ifdef TEST_COMPO
+#ifdef TEST_COMPO
 	automaton* dec = decalage(base, 2, 3);
 	add_identity(dec, 3);
 	final_accepting(base,3);
@@ -107,13 +112,25 @@ int main(int argc, char *argv[])
 	auto_minimize(base);
 	base = auto_unserialize(base, 2, NULL);
 	auto_serialize_write_dot_file(base, "output.dot", LASH_EXP_DIGIT);
+#endif 
 
-	#endif 
+#ifdef TEST_ADD
+	automaton* addit = addition( 1);
+	auto_serialize_write_dot_file(addit, "add.dot", LASH_EXP_DIGIT);
+	automaton* r_nor = r_normalize(order);
+	automaton* l_nor = l_normalize(order);
+	auto_serialize_write_dot_file(r_nor, "rn.dot", LASH_EXP_DIGIT);	
+	auto_serialize_write_dot_file(l_nor, "ln.dot", LASH_EXP_DIGIT);
 
-	
+#endif	
 
+#ifdef END_NOR
+	automaton* en = end_normalize(states, alph_max);
+	en = auto_unserialize(en, 2, NULL);
+	auto_serialize_write_dot_file(en, "en.dot", LASH_EXP_DIGIT);	
+#endif
 	 
-	#ifdef TEST_AUTO
+#ifdef TEST_AUTO
 	automaton* next = auto_copy(base);
 	add_identity(next, 3);
 	add_loop(next, 3);
@@ -140,10 +157,12 @@ int main(int argc, char *argv[])
 	printf("States :  %d \n", auto_nb_states(next));
 	auto_serialize_write_dot_file(next, "result.dot", LASH_EXP_DIGIT);
 	
-	#ifdef TEST_TEST_AUTO
+#ifdef TEST_TEST_AUTO
 	uint1 word[6] = {0,0,2,2,2,0};
 	//scanf("%6c", word);
 	automaton* b = test_automata(next, word, 6, order);
+
+	// automaton which accepts only the aimed alphabet
 	automaton* limited = auto_new_empty(1);
 	uint4* i_st = 0;
 	auto_add_new_state(limited, & i_st);
@@ -153,13 +172,13 @@ int main(int argc, char *argv[])
 	auto_add_new_transition(limited, i_st, i_st, 1, &zer );
 	auto_add_new_transition(limited, i_st, i_st, 1, &one );
 	//auto_add_new_transition(limited, i_st, i_st, 1, &two );
+
+
 	automaton* limit_alph = auto_intersection(b, limited);
 	auto_minimize(limit_alph);
 	auto_serialize_write_dot_file(limit_alph, "limit.dot", LASH_EXP_DIGIT);
-	#endif
-
-
-	#endif
+#endif
+#endif
 	
 	if (lash_end() < 0)
 	    lash_perror("lash_end");

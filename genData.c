@@ -45,7 +45,7 @@ void genData(const int order, const int alph_max, const int* values, hash_tab* r
 	
 }
 
-void genRules(const int alphMax,const int order, const int* values, hash_tab* t, hash_tab* states )
+void genRules(const int alphMax, const int order, const int* values, hash_tab* t, hash_tab* states )
 {
 	
 	int p = alphMax*2 - 2;
