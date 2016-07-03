@@ -1,6 +1,11 @@
+#define TEST_AUTO
+//#define TEST_COMPO
+#define TEST_TEST_AUTO
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 
 #include "lash.h"
@@ -9,19 +14,28 @@
 #include "auto-io-print.h"
 #include "auto-io-dots.h"
 #include "lash-auto-operations.h"
+#include "auto-minimize.h"
+#include "auto-serialize.h"
+
+
 
 #include "pattern.h"
 #include "hashtable_r.h"
 #include "genData.h"
-#include "auto-minimize.h"
+#include "composition.h"
+#include "test_auto.h"
+
 
 uint1* concat(int in, uint1* output, int sizeOut, int order);
-uint1* createLabel(uint1 in, uint1 out);
-automaton* getRed(int order, int alph_max);
-void redAdd(automaton* aut, uint4 state, uint1 toRed, bool isRest, uint1 alph, int nbTrans);
-automaton* getUn(int order, int alph_max);
-void unAdd(automaton* aut, uint4 state, int j, int curr, uint1 alph, int order, bool red);
 
+automaton* get_red(int order, int alph_max);
+void red_add(automaton* aut, uint4 state, uint1 toRed, bool isRest, uint1 alph, int nbTrans);
+automaton* get_un(int order, int alph_max);
+void un_add(automaton* aut, uint4 state, int j, int curr, uint1 alph, int order, bool red);
+automaton* decalage(automaton* a, int nb_dec, int alph);
+void add_identity(automaton* a, int alph);
+void final_accepting(automaton* a, int alph_max);
+void add_loop(automaton* a, int alph);
 
 // input format :  m a [ 1 1 1 ] [ 4 2 1 ]"
 int main(int argc, char *argv[])
@@ -65,7 +79,6 @@ int main(int argc, char *argv[])
 	hash_tab* transitions = createhash_tab(pow(10,order)*alph_max);
 
 	genData(order, alph_max, values, rules, states, transitions);
-	printTableRules(rules);
 	printf("Data generated... \n");
 
 	
@@ -76,111 +89,78 @@ int main(int argc, char *argv[])
 	
 	printf("a1\n");
 
-	automaton* a1 = getUn(order, alph_max);
+	automaton* a1 = get_un(order, alph_max);
+
 	printf("a2 \n");
-	automaton* a2 = getRed(order, alph_max);
-/*
-	// patterns are at most order long, times 4 because of int type. 
-  	automaton* aut = auto_new_empty(sizeof(int)*order);
-  	if(aut == NULL)
-  		lash_perror("automaton creation");
+	automaton* a2 = get_red(order, alph_max);
 
 
-	for(int i = 0; i < states->capacity; i++)
+	automaton* base = auto_product_union(a1, a2);
+	auto_minimize(base);
+	
+	#ifdef TEST_COMPO
+	automaton* dec = decalage(base, 2, 3);
+	add_identity(dec, 3);
+	final_accepting(base,3);
+	base = compose(base,2, dec,2, 3,3);
+	base = auto_seq_projection_separ(base, 3, 1, NULL);
+	auto_minimize(base);
+	base = auto_unserialize(base, 2, NULL);
+	auto_serialize_write_dot_file(base, "output.dot", LASH_EXP_DIGIT);
+
+	#endif 
+
+	
+
+	 
+	#ifdef TEST_AUTO
+	automaton* next = auto_copy(base);
+	add_identity(next, 3);
+	add_loop(next, 3);
+
+	auto_minimize(next);
+	 
+	for(int k = 1; k <= order + 1; k++)
 	{
+		automaton* dec = decalage(base, k, 3);
+		add_identity(dec, 3);
+		add_loop(dec, 3);
+		auto_minimize(dec);
+		next = compose(next,2, dec,2, 3, 3);
+		auto_minimize(next);
 
-		if(states->tab[i] == NULL)
-			continue;
-		statef* p;
-		hash_en* e = states->tab[i];
-		p = ((statef*) e->payload);
-		
-		if(auto_add_new_state(aut, &(p->nb)) != 0)
-			lash_perror("state creation");
-
-
-		while(e->next != NULL)
-		{
-			e = e->next;
-			p = ((statef*) e->payload);
-
-			if(auto_add_new_state(aut, &(p->nb)) != 0)
-				lash_perror("state creation");
-
-		}
+		next = auto_seq_projection_separ(next, 3, 1, NULL);
+		auto_minimize(next);
 	}
-	printf("states created... \n");
-	for(int i = 0; i < transitions->capacity; i++)
-	{
-
-		if(transitions->tab[i] == NULL)
-			continue;
-		transition* p;
-		hash_en* e = transitions->tab[i];
-		p = ((transition*) e->payload);
-
-		statef* in = getState(states, p->st_state, hashKey(states->capacity, p->st_state));
-		statef* out = getState(states, p->en_state, hashKey(states->capacity, p->en_state));
-
-		int tab_in = p->input;
-		int* tab_out = NULL;
-		uint1* t_out = NULL;
-		uint1* label;
-		if(p->output != NULL)
-		{
-			tab_out = p->output->values;
-			t_out =(uint1*) tab_out;
-			label = concat(tab_in, t_out, p->output->size*sizeof(int), order);	
-		}
-		else
-		{
-			label = concat(tab_in, t_out, 0, order);	
-		}
-		
+	auto_prune(next);
+	add_loop(next, 3);
+	auto_minimize(next);
+	printf("States :  %d \n", auto_nb_states(next));
+	//next = auto_unserialize(next, 2, NULL);
+	printf("States :  %d \n", auto_nb_states(next));
+	auto_serialize_write_dot_file(next, "result.dot", LASH_EXP_DIGIT);
+	
+	#ifdef TEST_TEST_AUTO
+	uint1 word[6] = {0,0,2,2,2,0};
+	//scanf("%6c", word);
+	automaton* b = test_automata(next, word, 6, order);
+	automaton* limited = auto_new_empty(1);
+	uint4* i_st = 0;
+	auto_add_new_state(limited, & i_st);
+	auto_add_new_i_state(limited, i_st);
+	auto_mark_accepting_state(limited, i_st);
+	uint1 zer = 0, one = 1, two = 2;
+	auto_add_new_transition(limited, i_st, i_st, 1, &zer );
+	auto_add_new_transition(limited, i_st, i_st, 1, &one );
+	//auto_add_new_transition(limited, i_st, i_st, 1, &two );
+	automaton* limit_alph = auto_intersection(b, limited);
+	auto_minimize(limit_alph);
+	auto_serialize_write_dot_file(limit_alph, "limit.dot", LASH_EXP_DIGIT);
+	#endif
 
 
-		if(auto_add_new_transition(aut, in->nb, out->nb, 2, label))
-	  		lash_perror("transition creation");
-
-		while(e->next != NULL)
-		{
-			e = e->next;
-			p = ((transition*) e->payload);
-			tab_in = p->input;
-
-			in = getState(states, p->st_state, hashKey(states->capacity, p->st_state));
-			out = getState(states, p->en_state, hashKey(states->capacity, p->en_state));
-			t_out = NULL;
-			if(p->output != NULL)
-			{
-				tab_out = p->output->values;
-				t_out =(uint1*) tab_out;
-				label = concat(tab_in, t_out, p->output->size*sizeof(int), order);	
-			}
-			else
-			{
-				label = concat(tab_in, t_out, 0, order);	
-			}
-
-			if(auto_add_new_transition(aut, in->nb, out->nb, 2, label))
-	  			lash_perror("transition creation");
-
-
-		}
-	}
-
-	auto_print(aut);
-
-	auto_free(aut);	
-
-*/
-	auto_merge(a1, a2);
-	auto_minimize(a1);
-	tran * t = auto_transition(a2, 1, 0);
-
-	printf("Contenu label %i \n", *(auto_transition_label_ptr(t, 1)) );
-	auto_serialize_write_dot_file(a2, "output.dot", LASH_EXP_DIGIT);
-	//auto_print(a);
+	#endif
+	
 	if (lash_end() < 0)
 	    lash_perror("lash_end");
 
@@ -222,7 +202,7 @@ int main(int argc, char *argv[])
 }
 
 
-automaton* getUn(int order, int alph_max)
+automaton* get_un(int order, int alph_max)
 {
 	automaton* aut = auto_new_empty(sizeof(char));
 
@@ -244,13 +224,13 @@ automaton* getUn(int order, int alph_max)
 
 	for(int j = 1 ; j < order; j++)
 	{
-		unAdd(aut, second, j, 1, alph_max*2, order, false);
+		un_add(aut, second, j, 1, alph_max*2, order, false);
 	}
 
 	return aut;
 }
 
-void unAdd(automaton* aut, uint4 state, int j, int curr, uint1 alph, int order, bool red)
+void un_add(automaton* aut, uint4 state, int j, int curr, uint1 alph, int order, bool red)
 {
 	if(curr ==  j+order+1 )
 		return;
@@ -264,7 +244,7 @@ void unAdd(automaton* aut, uint4 state, int j, int curr, uint1 alph, int order, 
 			auto_add_new_transition(aut, state, newState, 2, createLabel(x, x-2));
 
 		}
-		unAdd(aut, newState, j, curr+1, alph, order, false);
+		un_add(aut, newState, j, curr+1, alph, order, false);
 	}
 	else if(curr < j)
 	{
@@ -272,7 +252,7 @@ void unAdd(automaton* aut, uint4 state, int j, int curr, uint1 alph, int order, 
 		{
 			auto_add_new_transition(aut, state, newState, 2, createLabel(x, x-1));
 		}
-		unAdd(aut, newState, j, curr+1, alph, order, false);
+		un_add(aut, newState, j, curr+1, alph, order, false);
 	}
 	else if(j < curr && curr <= order )
 	{
@@ -282,13 +262,13 @@ void unAdd(automaton* aut, uint4 state, int j, int curr, uint1 alph, int order, 
 			{
 				auto_add_new_transition(aut, state, newState, 2, createLabel(x,x));
 			}
-			unAdd(aut, newState, j, curr+1, alph, order, red);
+			un_add(aut, newState, j, curr+1, alph, order, red);
 		}
 		else
 		{
 			uint4 newState2 = 0;
 			auto_add_new_transition(aut, state, newState, 2, createLabel(alph-2, alph-2));
-			unAdd(aut, newState, j,curr+1, alph, order, true);
+			un_add(aut, newState, j,curr+1, alph, order, true);
 
 			
 
@@ -296,7 +276,7 @@ void unAdd(automaton* aut, uint4 state, int j, int curr, uint1 alph, int order, 
 			{
 				auto_add_new_state(aut, &newState2);
 				auto_add_new_transition(aut, state, newState2, 2, createLabel(alph-1, alph-1));
-				unAdd(aut, newState2, j,curr+1, alph, order, false);
+				un_add(aut, newState2, j,curr+1, alph, order, false);
 			}
 			
 
@@ -310,7 +290,7 @@ void unAdd(automaton* aut, uint4 state, int j, int curr, uint1 alph, int order, 
 			auto_add_new_transition(aut, state, newState, 2, createLabel(i, i+1));
 			
 		}
-		unAdd(aut, newState, j, curr+1, alph, order, red);
+		un_add(aut, newState, j, curr+1, alph, order, red);
 
 	}
 
@@ -321,7 +301,7 @@ void unAdd(automaton* aut, uint4 state, int j, int curr, uint1 alph, int order, 
 
 }
 
-automaton* getRed(int order, int alph_max)
+automaton* get_red(int order, int alph_max)
 {
 	automaton* aut = auto_new_empty(sizeof(char));
 
@@ -345,7 +325,7 @@ automaton* getRed(int order, int alph_max)
 
   		auto_add_new_transition(aut, init, second,2, createLabel(0,i));
 
-  		redAdd(aut, second, i, false, alph_max*2, order);
+  		red_add(aut, second, i, false, alph_max*2, order);
 
 
   	}
@@ -355,7 +335,7 @@ automaton* getRed(int order, int alph_max)
 /**
 * alph: upper bound of the input alphabet (in general 2)
 **/
-void redAdd(automaton* aut, uint4 state, uint1 toRed, bool isRest, uint1 alph, int nbTrans)
+void red_add(automaton* aut, uint4 state, uint1 toRed, bool isRest, uint1 alph, int nbTrans)
 {
 	if(nbTrans == 0)
 		return;
@@ -366,7 +346,7 @@ void redAdd(automaton* aut, uint4 state, uint1 toRed, bool isRest, uint1 alph, i
 	if(! isRest)
 	{
 		auto_add_new_transition(aut, state, newState, 2, createLabel(toRed, 0));
-		redAdd(aut, newState, toRed, true, alph, nbTrans-1);
+		red_add(aut, newState, toRed, true, alph, nbTrans-1);
 
 		if(nbTrans != 1)
 		{
@@ -377,7 +357,7 @@ void redAdd(automaton* aut, uint4 state, uint1 toRed, bool isRest, uint1 alph, i
 			{
 				auto_add_new_transition(aut, state, newState2, 2, createLabel(i, i-toRed));
 			}
-			redAdd(aut, newState2, toRed, false, alph, nbTrans-1);
+			red_add(aut, newState2, toRed, false, alph, nbTrans-1);
 		}
 	}
 	else
@@ -386,7 +366,7 @@ void redAdd(automaton* aut, uint4 state, uint1 toRed, bool isRest, uint1 alph, i
 		{
 			auto_add_new_transition(aut, state, newState, 2, createLabel(i, i-toRed));
 		}
-		redAdd(aut, newState, toRed, isRest, alph, nbTrans-1);
+		red_add(aut, newState, toRed, isRest, alph, nbTrans-1);
 	}
 
 	if(nbTrans == 1)
@@ -394,13 +374,6 @@ void redAdd(automaton* aut, uint4 state, uint1 toRed, bool isRest, uint1 alph, i
 
 }
 
-uint1* createLabel(uint1 in, uint1 out)
-{
-	uint1* res = calloc(2, sizeof(char));
-	res[0] = in;
-	res[1] = out;
-	return res;
-}
 
 uint1* concat(int in, uint1* output, int sizeOut, int order)
 {
@@ -423,3 +396,79 @@ uint1* concat(int in, uint1* output, int sizeOut, int order)
 
 }
 
+automaton* decalage(automaton* a, int nb_dec, int alph)
+{
+	automaton* b = auto_copy(a);
+	uint4 i_state = 0;
+	auto_i_state(a, 0, &i_state);
+	auto_remove_i_states(b);
+	uint4 newInit= 0;
+	auto_add_new_state(b, &newInit);
+	auto_add_new_i_state(b, newInit);
+	
+	uint4 prev = newInit;
+	for(int i = 1; i < nb_dec; i++)
+	{
+		uint4 newState = 0;
+		auto_add_new_state(b, &newState);
+		for(int j = 0; j <= alph; j++)
+		{
+			auto_add_new_transition(b, prev, newState, 2, createLabel(j,j));
+		}
+		prev = newState;
+	}
+	
+
+	for(int i = 0; i <= alph; i++)
+	{
+		auto_add_new_transition(b, prev, i_state, 2, createLabel(i,i));
+	}
+	return b;
+}
+
+void add_loop(automaton* a, int alph)
+{
+	uint4 init = 0;
+	auto_i_state(a, 0, &init);
+	
+	for(int i = 0; i < auto_nb_states(a); i++)
+	{
+		if(auto_accepting_state(a, i))
+		{
+			auto_unmark_accepting_state(a, i);
+			auto_add_new_transition(a, i, init, 0, NULL);
+		}
+	}
+	auto_mark_accepting_state(a, init);
+
+}
+
+void final_accepting(automaton* a, int alph_max)
+{
+	for(int i = 0; i < auto_nb_states(a); i++)
+	{
+		if(auto_accepting_state(a, i))
+		{
+			for(uint1 j = 0; j <= alph_max; j++)
+			{
+				auto_add_new_transition(a, i, i, 2, createLabel(j,j));
+			}
+		}
+	}
+
+
+}
+
+void add_identity(automaton* a, int alph)
+{
+	uint4 puits = 0;
+	auto_add_new_state(a, &puits);
+	int init = 0;  
+	auto_i_state(a, 0, &init); 
+	for(int i = 0; i <= alph; i++)
+	{
+		auto_add_new_transition(a, init, puits, 2, createLabel(i,i) );
+		auto_add_new_transition(a, puits, puits, 2, createLabel(i,i));
+	}
+	auto_mark_accepting_state(a, puits);
+}
