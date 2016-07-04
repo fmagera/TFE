@@ -1,3 +1,4 @@
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -13,10 +14,13 @@
 #include "auto-minimize.h"
 #include "auto-serialize.h"
 
+
+
+#include "pattern.h"
+#include "hashtable_r.h"
+#include "genData.h"
 #include "composition.h"
+#include "test_auto.h"
+#include "addition.h"
 
-automaton* test_automata(automaton* a, uint1* in, int len, int order);
-
-automaton* test_automata2 (automaton* a, uint1* in, int ln, uint1* in2, int ln2, int order);
-
-automaton* create_word_auto(uint1* in, int ln);
+automaton* fib_addition();

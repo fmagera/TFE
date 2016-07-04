@@ -11,6 +11,14 @@ automaton* end_normalize(hash_tab* states, int alph_max)
 		lash_perror("initial state creation");
 
 	auto_add_new_i_state(a, init);
+	auto_mark_accepting_state(a, init);
+	for(int i = 0; i <= alph_max ; i++)
+	{
+		uint1 l[2] = {i,i};
+		if(auto_add_new_transition(a, init, init, 2, &l) != 0)
+			lash_perror("Tran creation");
+	}
+
 	for(int i = 0; i < states->capacity; i++)
 	{
 		if(states->tab[i] == NULL)
