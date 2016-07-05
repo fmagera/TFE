@@ -46,6 +46,10 @@ automaton* fib_addition()
 	label[0] = 1;
 	if(auto_add_new_transition(a, states[1], states[6], 3,  label ) != 0)
 			lash_perror("state creation"); 
+	label[1] = 0;
+	if(auto_add_new_transition(a, states[1], states[4], 3,  label ) != 0)
+			lash_perror("state creation"); 
+
 	// 2
 	label[0] = 0;
 	label[1] = 0;
