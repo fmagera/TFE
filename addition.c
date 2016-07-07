@@ -42,8 +42,7 @@ automaton* r_normalize(int order)
 	auto_mark_accepting_state(a,init);
 	uint1 label0[2] = {0,0};
 	uint1 label1[2] = {1,1};
-	uint1 label3[2] = {1,0};
-	auto_add_new_transition(a, init, init, 2, &label0);
+	uint1 label3[2] = {0,1};
 
 	uint4 prev = init;
 	uint4 second;
@@ -71,8 +70,14 @@ automaton* r_normalize(int order)
 	if(auto_add_new_transition(a, prev, init, 2, & l2) != 0)
 		lash_perror("transition creation");
 
-	prev = init;
+	
 	a = auto_reverse(a);
+	auto_i_state(a, 0, &init); 
+	prev = init;
+	tran* to_sec = auto_transition(a, init, 0);
+	second =  auto_transition_dest(to_sec);
+	auto_add_new_transition(a, init, init, 2, &label0);
+
 	for(int i = 0; i < order-1; i++)
 	{	
 		uint4 next;
@@ -148,9 +153,12 @@ automaton* l_normalize(int order)
 			lash_perror("transition creation");
 		if(auto_add_new_transition(a, next, init, 2, & label0 ) != 0)
 			lash_perror("transition creation");
-		if(auto_add_new_transition(a, next, second, 2, &l1 ) != 0)
-			lash_perror("transition creation");
 		auto_mark_accepting_state(a,next);
+		if(i != order-1)
+		{
+			if(auto_add_new_transition(a, next, second, 2, &l1 ) != 0)
+				lash_perror("transition creation");
+		}
 		prev = next;
 	}
 

@@ -4,6 +4,7 @@
 //#define TEST_ADD
 //#define END_NOR
 #define TEST_INTE
+//#define TEST_MAX_SIZE
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,6 +44,7 @@ automaton* decalage(automaton* a, int nb_dec, int alph);
 void add_identity(automaton* a, int alph);
 void final_accepting(automaton* a, int alph_max);
 void add_loop(automaton* a, int alph);
+automaton* accept_all_size(int alph_max, int size_max);
 
 // input format :  m a [ 1 1 1 ] [ 4 2 1 ]"
 int main(int argc, char *argv[])
@@ -99,6 +101,7 @@ int main(int argc, char *argv[])
 	automaton* a2 = get_red(order, alph_max);
 	automaton* base = auto_product_union(a1, a2);
 	auto_minimize(base);
+
 	
 
 	
@@ -117,25 +120,36 @@ int main(int argc, char *argv[])
 	automaton* addit = addition( 1);
 	auto_serialize_write_dot_file(addit, "add.dot", LASH_EXP_DIGIT);
 	automaton* r_nor = r_normalize(order);
-	auto_serialize_write_dot_file(r_nor, "r_nor.dot", LASH_EXP_DIGIT);
+	
 	auto_minimize(r_nor);
 	automaton* l_nor = l_normalize(order);
 	
-	auto_serialize_write_dot_file(l_nor, "l_nor.dot", LASH_EXP_DIGIT);
-	
 	auto_minimize(l_nor);
-	automaton* r_nor_rbis = auto_unserialize(r_nor, 2, NULL);
-	auto_serialize_write_dot_file(r_nor_rbis, "r_nor_r.dot", LASH_EXP_DIGIT);
+	
 	automaton* normalizer = compose(l_nor, 2, r_nor, 2,3,3);
 	auto_minimize(normalizer);
 	normalizer = auto_seq_projection_separ(normalizer, 3, 1, NULL);
-	auto_minimize(normalizer);
+	
+	
+	auto_minimize(normalizer);	
 	normalizer = auto_unserialize(normalizer, 2, NULL);
+	r_nor = auto_unserialize(r_nor, 2, NULL);
+	l_nor = auto_unserialize(l_nor, 2, NULL);
+	auto_serialize_write_dot_file(r_nor, "r_nor.dot", LASH_EXP_DIGIT);
+	auto_serialize_write_dot_file(l_nor, "l_nor.dot", LASH_EXP_DIGIT);
 	auto_serialize_write_dot_file(normalizer, "nor.dot", LASH_EXP_DIGIT);	
 	//auto_serialize_write_dot_file(l_nor, "ln.dot", LASH_EXP_DIGIT);
 
-#endif	
 
+#endif	
+#ifdef TEST_MAX_SIZE
+
+	automaton* a = accept_all_size(3, 8*order);
+	auto_serialize_write_dot_file(a, "max_size.dot", LASH_EXP_DIGIT);
+	automaton* fib = fib_addition();
+	fib = compose(fib, 3, a, 1, 3, 3);
+	auto_serialize_write_dot_file(fib, "fib_size.dot", LASH_EXP_DIGIT);
+#endif
 #ifdef END_NOR
 	automaton* en = end_normalize(states, alph_max);
 	en = auto_unserialize(en, 2, NULL);
@@ -194,46 +208,82 @@ int main(int argc, char *argv[])
 	automaton* addit = addition(1);
 	automaton* r_nor = r_normalize(order);
 	automaton* l_nor = l_normalize(order);
-	auto_serialize_write_dot_file(r_nor, "rn.dot", LASH_EXP_DIGIT);	
-	auto_serialize_write_dot_file(l_nor, "ln.dot", LASH_EXP_DIGIT);	
+
 	auto_minimize(addit);
 	auto_minimize(r_nor);
-	//auto_serialize_write_dot_file(r_nor, "rn.dot", LASH_EXP_DIGIT);	
 	auto_minimize(l_nor);
 
+	automaton* en = end_normalize(states, alph_max);
+	auto_serialize_write_dot_file(en, "en.dot", LASH_EXP_DIGIT);
 
-	automaton* limited = auto_new_empty(1);
-	uint4* i_st = 0;
-	auto_add_new_state(limited, & i_st);
-	auto_add_new_i_state(limited, i_st);
-	auto_mark_accepting_state(limited, i_st);
-	uint1 zer = 0, one = 1, two = 2;
-	auto_add_new_transition(limited, i_st, i_st, 1, &zer );
-	auto_add_new_transition(limited, i_st, i_st, 1, &one );
+	auto_minimize(en);
 
 	printf("Addition bit by bit, normalizations and alphabet limitation generated \n ");
 	automaton* next = auto_copy(base);
 	add_identity(next, 3);
+	//add_loop(next, 3);
 	final_accepting(next, 3);
 
 	auto_minimize(next);
 	base = auto_copy(next);
-	 
+	automaton* next2 = decalage(next, 4*order, 3);
+	automaton* base2 = auto_copy(next2);
+	auto_minimize(next2);
+
+	
 	for(int k = 1; k < 2*order; k++)
 	{
 		automaton* dec = decalage(base, k, 3);
-		//add_identity(dec, 3);
+		auto_serialize_write_dot_file(dec, "dec.dot", LASH_EXP_DIGIT);
+		automaton* dec2 = decalage(base2, k, 3);
+		add_identity(dec, 3);
+		add_identity(dec2, 3);
+		
+		final_accepting(dec, 3);
+		final_accepting(dec2, 3);
 		auto_minimize(dec);
+		auto_minimize(dec2);
 		next = compose(next,2, dec,2, 3, 3);
+		next2 = compose(next2,2, dec2,2, 3, 3);
 		auto_minimize(next);
-
+		auto_minimize(next2);
 		next = auto_seq_projection_separ(next, 3, 1, NULL);
 		auto_minimize(next);
+		next2 = auto_seq_projection_separ(next2, 3, 1, NULL);
+		auto_minimize(next2);
+
 	}
 	//add_loop(next, 3);
+	next = compose(next, 2, next2, 2, 3, 3);
+	next = auto_seq_projection_separ(next, 3, 1, NULL);
+	final_accepting(next, 1);
+	add_loop(next, 3);
+
 	auto_prune(next);
 	auto_minimize(next);
-	printf("Normalization post add generated \n ");
+	next = compose(next, 2, en, 2, 3, 3);
+	next = auto_seq_projection_separ(next, 3, 1, NULL);
+	auto_minimize(next);
+	auto_minimize(next);
+	uint1 word[4] = {0 ,2,0,0,0,0};
+	//scanf("%6c", word);
+	automaton* normalize_test = test_automata(next, word, 4, order);
+	auto_serialize_write_dot_file(normalize_test, "nor_test.dot",LASH_EXP_DIGIT);
+	automaton* n2 = auto_unserialize(next, 2, NULL);
+	auto_minimize(n2);
+	auto_serialize_write_dot_file(n2, "nor_c.dot",LASH_EXP_DIGIT);
+
+
+	//add_loop(next2, 3);
+	//auto_prune(next2);
+	//auto_minimize(next2);
+	//next = compose(next, 2, next2,2, 3, 3);
+	//next = auto_seq_projection_separ(next, 3, 1, NULL);
+	//auto_minimize(next);
+	//add_loop(next, 3);
+	//auto_prune(next);
+	//auto_minimize(next);
+	printf("Normalization post add generated  %d \n ", auto_nb_states(next));
 
 	automaton* result = compose(addit, 3, next, 2, 3, 4);
 	result = auto_seq_projection_separ(result, 4, 2, NULL);
@@ -242,12 +292,10 @@ int main(int argc, char *argv[])
 	result = auto_seq_projection_separ(result, 4, 2, NULL);
 	auto_minimize(result);
 	printf("Composition of addition and post normalization %d \n ", auto_nb_states(result));
-	automaton* en = end_normalize(states, alph_max);
-	auto_minimize(en);
-	result = compose(result, 3, en, 2, 3, 4);
-	auto_minimize(result);
+	
+	
 	printf("Composition of end normalization \n ");
-	result = auto_seq_projection_separ(result, 4, 2, NULL);
+	//result = auto_seq_projection_separ(result, 4, 2, NULL);
 
 
 	auto_serialize_write_dot_file(result, "prenor.dot", LASH_EXP_DIGIT);
@@ -265,6 +313,9 @@ int main(int argc, char *argv[])
 	auto_serialize_write_dot_file(result2, "add.dot", LASH_EXP_DIGIT);
 
 	automaton* fib = fib_addition();
+	automaton* a = accept_all_size(3, 8*order);
+	auto_serialize_write_dot_file(a, "max_size.dot", LASH_EXP_DIGIT);
+	fib = compose(fib, 3, a, 1, 3, 3);
 	auto_serialize_write_dot_file(fib, "fib_add.dot", LASH_EXP_DIGIT);
 	auto_minimize(fib);
 	if(auto_inclusion(fib, result) == 1)
@@ -279,11 +330,11 @@ int main(int argc, char *argv[])
 
 	auto_serialize_write_dot_file(result, "addition.dot", LASH_EXP_DIGIT);
 
-	uint1 w1[15] = {0,1,0,1,0,1,0,1,0,1,0,1,0,1,0};
-	uint1 w2[15] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,1};
+	uint1 w1[7] = {0 ,2,0,2,0,2,0};;
+	uint1 w2[7] = {0,0,0,0,0,0,0};
 	//scanf("%6c", word);
-	automaton* b = test_automata2(result, w1,15,w2,15, order);
-	automaton* c = test_automata2(fib, w1,15,w2,15, order);
+	automaton* b = test_automata2(result, w1,7,w2,7, order);
+	automaton* c = test_automata2(fib, w1,4,w2,4, order);
 
 	auto_serialize_write_dot_file(b, "test.dot", LASH_EXP_DIGIT);
 	auto_serialize_write_dot_file(c, "test2.dot", LASH_EXP_DIGIT);
@@ -536,7 +587,7 @@ automaton* decalage(automaton* a, int nb_dec, int alph)
 	uint4 newInit= 0;
 	auto_add_new_state(b, &newInit);
 	auto_add_new_i_state(b, newInit);
-	
+	auto_mark_accepting_state(b, newInit);
 	uint4 prev = newInit;
 	for(int i = 1; i < nb_dec; i++)
 	{
@@ -603,4 +654,30 @@ void add_identity(automaton* a, int alph)
 		auto_add_new_transition(a, puits, puits, 2, createLabel(i,i));
 	}
 	auto_mark_accepting_state(a, puits);
+}
+
+automaton* accept_all_size(int alph_max, int size_max)
+{
+	automaton* a = auto_new_empty(1);
+	uint4 init;
+	if(auto_add_new_state(a, &init) != 0)
+		lash_perror("state creation");
+	auto_add_new_i_state(a, init);
+	uint4 prev = init;
+	auto_mark_accepting_state(a, init);
+	for(int i = 0 ; i < size_max; i++)
+	{
+		uint4 new;
+		if(auto_add_new_state(a, &new) != 0)
+			lash_perror("state creation");
+		auto_mark_accepting_state(a, new);
+		for(int j = 0; j <= alph_max; j++)
+		{
+			uint1 label = j;
+			if(auto_add_new_transition(a, prev, new, 1, & label) != 0 )
+				lash_perror("transition creattion");
+		}
+		prev = new;
+	}
+	return a;
 }
