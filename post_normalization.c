@@ -41,7 +41,7 @@ void red_add(automaton* aut, uint4 state, uint1 toRed, bool isRest, uint1 alph, 
 automaton* get_un(int order, int alph_max);
 void un_add(automaton* aut, uint4 state, int j, int curr, uint1 alph, int order, bool red);
 automaton* decalage(automaton* a, int nb_dec, int alph);
-void add_identity(automaton* a, int alph);
+void add_identity(automaton* a, int alph, int order);
 void final_accepting(automaton* a, int alph_max);
 void add_loop(automaton* a, int alph);
 automaton* accept_all_size(int alph_max, int size_max);
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
 	
 #ifdef TEST_COMPO
 	automaton* dec = decalage(base, 2, 3);
-	add_identity(dec, 3);
+	add_identity(dec, 3, order);
 	final_accepting(base,3);
 	base = compose(base,2, dec,2, 3,3);
 	base = auto_seq_projection_separ(base, 3, 1, NULL);
@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
 	 
 #ifdef TEST_AUTO
 	automaton* next = auto_copy(base);
-	add_identity(next, 3);
+	add_identity(next, 3, order);
 	add_loop(next, 3);
 
 	auto_minimize(next);
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 	for(int k = 1; k <= order + 1; k++)
 	{
 		automaton* dec = decalage(base, k, 3);
-		add_identity(dec, 3);
+		add_identity(dec, 3,order);
 		add_loop(dec, 3);
 		auto_minimize(dec);
 		next = compose(next,2, dec,2, 3, 3);
@@ -213,6 +213,11 @@ int main(int argc, char *argv[])
 	auto_minimize(r_nor);
 	auto_minimize(l_nor);
 
+	automaton* normalizer = compose(l_nor, 2, r_nor, 2,3,3);
+	auto_minimize(normalizer);
+	normalizer = auto_seq_projection_separ(normalizer, 3, 1, NULL);
+	auto_minimize(normalizer);	
+
 	automaton* en = end_normalize(states, alph_max);
 	auto_serialize_write_dot_file(en, "en.dot", LASH_EXP_DIGIT);
 
@@ -220,14 +225,17 @@ int main(int argc, char *argv[])
 
 	printf("Addition bit by bit, normalizations and alphabet limitation generated \n ");
 	automaton* next = auto_copy(base);
-	add_identity(next, 3);
+	add_identity(next, 3, order);
 	//add_loop(next, 3);
 	final_accepting(next, 3);
 
 	auto_minimize(next);
-	base = auto_copy(next);
-	automaton* next2 = decalage(next, 4*order, 3);
+	//base = auto_copy(next);
+	automaton* next2 = decalage(base, 4*order, 3);
 	automaton* base2 = auto_copy(next2);
+	add_identity(next2, 3, order);
+	//add_loop(next, 3);
+	final_accepting(next2, 3);
 	auto_minimize(next2);
 
 	
@@ -236,8 +244,8 @@ int main(int argc, char *argv[])
 		automaton* dec = decalage(base, k, 3);
 		auto_serialize_write_dot_file(dec, "dec.dot", LASH_EXP_DIGIT);
 		automaton* dec2 = decalage(base2, k, 3);
-		add_identity(dec, 3);
-		add_identity(dec2, 3);
+		add_identity(dec, 3, order);
+		add_identity(dec2, 3, order);
 		
 		final_accepting(dec, 3);
 		final_accepting(dec2, 3);
@@ -251,14 +259,15 @@ int main(int argc, char *argv[])
 		auto_minimize(next);
 		next2 = auto_seq_projection_separ(next2, 3, 1, NULL);
 		auto_minimize(next2);
+		printf("%d composed \n", k);
 
 	}
 	//add_loop(next, 3);
 	next = compose(next, 2, next2, 2, 3, 3);
 	next = auto_seq_projection_separ(next, 3, 1, NULL);
 	final_accepting(next, 1);
-	add_loop(next, 3);
-
+	//add_loop(next, 3);
+	printf("now postnormalization \n");
 	auto_prune(next);
 	auto_minimize(next);
 	next = compose(next, 2, en, 2, 3, 3);
@@ -274,20 +283,16 @@ int main(int argc, char *argv[])
 	auto_serialize_write_dot_file(n2, "nor_c.dot",LASH_EXP_DIGIT);
 
 
-	//add_loop(next2, 3);
-	//auto_prune(next2);
-	//auto_minimize(next2);
-	//next = compose(next, 2, next2,2, 3, 3);
-	//next = auto_seq_projection_separ(next, 3, 1, NULL);
-	//auto_minimize(next);
-	//add_loop(next, 3);
-	//auto_prune(next);
-	//auto_minimize(next);
 	printf("Normalization post add generated  %d \n ", auto_nb_states(next));
 
 	automaton* result = compose(addit, 3, next, 2, 3, 4);
 	result = auto_seq_projection_separ(result, 4, 2, NULL);
 	auto_minimize(result);
+	printf("once composed %d \n", auto_nb_states(result));
+	next = compose(next, 2, normalizer, 2, 3, 3);
+	next = auto_seq_projection_separ(next, 3, 1, NULL);
+	auto_minimize(next);
+	printf("twice composed %d \n", auto_nb_states(result));
 	result = compose(result, 3, next, 2, 3, 4);
 	result = auto_seq_projection_separ(result, 4, 2, NULL);
 	auto_minimize(result);
@@ -300,13 +305,6 @@ int main(int argc, char *argv[])
 
 	auto_serialize_write_dot_file(result, "prenor.dot", LASH_EXP_DIGIT);
 
-	result = compose(result, 3, l_nor, 2, 3, 4);
-	result = auto_seq_projection_separ(result, 4, 2, NULL);
-	auto_minimize(result);
-	//automaton* r_nor_r = auto_reverse(r_nor);
-	result = compose(result, 3, r_nor, 2, 3, 4);
-	result = auto_seq_projection_separ(result, 4, 2, NULL);
-	auto_minimize(result);
 	automaton* result2 = auto_unserialize(result, 3, NULL);
 	auto_minimize(result2);
 	printf("Final normalizations %d \n ", auto_nb_states(result2));
@@ -641,18 +639,29 @@ void final_accepting(automaton* a, int alph_max)
 
 }
 
-void add_identity(automaton* a, int alph)
+void add_identity(automaton* a, int alph, int order)
 {
 	uint4 puits = 0;
 	auto_add_new_state(a, &puits);
 	int init = 0;  
 	auto_i_state(a, 0, &init); 
+	uint4 prev = init;
 	auto_add_new_transition(a, init, puits, 0, NULL );
-	for(int i = 0; i <= alph; i++)
+	for(int j = 0; j <= 2*order; j++)
 	{
-		auto_add_new_transition(a, init, puits, 2, createLabel(i,i) );
-		auto_add_new_transition(a, puits, puits, 2, createLabel(i,i));
+		uint4 next;
+		if(auto_add_new_state(a, &next) != 0)
+			lash_perror("state creation");
+
+		for(int i = 0; i <= alph; i++)
+		{
+			auto_add_new_transition(a, prev, next, 2, createLabel(i,i) );
+		}
+		if(j > order )
+			auto_mark_accepting_state(a, next);
+		prev = next;
 	}
+	
 	auto_mark_accepting_state(a, puits);
 }
 
