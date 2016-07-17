@@ -12,7 +12,7 @@ automaton* end_normalize(hash_tab* states, int alph_max)
 
 	auto_add_new_i_state(a, init);
 	auto_mark_accepting_state(a, init);
-	for(int i = 0; i <= alph_max ; i++)
+	for(int i = 0; i <= alph_max +2 ; i++)
 	{
 		uint1 l[2] = {i,i};
 		if(auto_add_new_transition(a, init, init, 2, &l) != 0)
