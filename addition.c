@@ -1,4 +1,41 @@
 #include "addition.h"
+automaton* normalised(int order, int alph_max)
+{
+	automaton* a = auto_new_empty(1);
+	if(!a)
+		lash_perror("automaton creation");
+
+	uint4 init;
+	if(auto_add_new_state(a, &init))
+		lash_perror("initial state creation");
+	auto_add_new_i_state(a, init);
+	auto_mark_accepting_state(a,init);
+
+	printf("ok\n");
+	uint4 prev = init;
+	uint1 zero = 0;
+
+	if(auto_add_new_transition(a, init, init, 1, &zero ))
+			lash_perror(" tran creation");
+
+	for(int i = 0 ; i < order-1; i++)
+	{
+		uint4 new;
+		if(auto_add_new_state(a, &new))
+			lash_perror("state creation");
+		auto_mark_accepting_state(a,new);
+		
+		for(uint1 j = 1; j <= alph_max;j++)
+		{
+			if(auto_add_new_transition(a, prev, new, 1, &j ))
+				lash_perror(" tran creation");
+		}
+		if(auto_add_new_transition(a, new, init, 1, &zero ))
+			lash_perror(" tran creation");
+		prev = new;
+	}
+	return a;
+}
 
 automaton* addition(uint1 alph_max)
 {
