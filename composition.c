@@ -125,7 +125,7 @@ void new_comp(automaton* a, int order)
 {
 	hash_tab* path_in = createhash_tab(pow(10,order));
 	hash_tab* path_out = createhash_tab(pow(10,order));
-	for(int j = 1; j <= order; j++)
+	for(int j = 2; j <= order; j++)
 	{
 		for(int i = 0; i < auto_nb_states(a); i++)
 		{
@@ -151,33 +151,27 @@ void new_comp(automaton* a, int order)
 			}
 		}
 	}
-
+	
 	for(int i = 0; i < path_out->capacity; i++)
 	{
 		if(path_out->tab[i] == NULL)
 			continue;
 		path_c* p;
-		hash_en* e = path_out->tab[i];
-		p = ((path_c*) e->payload);
-		printf(" I  : %d State end %d  %d : ",i, p->state,p->key );
-		for(int l = 0; l < p->nb_trans/2;l++)
-		{
-			printf(" %u / %u ", p->tran_in[l], p->tran_out[l]);
-
-		}
+		hash_en* e1 = path_out->tab[i];
+		p = ((path_c*) e1->payload);
+		
 		if(hasKey(path_in,p->key))
 		{
 			path_c* in;
-			hash_en* e = path_in->tab[i];
-			in = ((path_c*) e->payload);
-			printf("\nState out : %d \n", in->state);
+			hash_en* e2 = path_in->tab[i];
+			in = ((path_c*) e2->payload);
 			if(in->nb_trans == p->nb_trans)
 			{
 				
 				int equal = 1;
 				for(int k = 0; k < p->nb_trans/2 ; k++)
 				{
-					printf(" comp %u %u \t", in->tran_in[k], p->tran_out[k] );
+					
 					if(in->tran_out[k] != p->tran_in[k])
 					{
 						equal = 0;
@@ -198,21 +192,25 @@ void new_comp(automaton* a, int order)
 						}
 
 					}
+					printf("ADDED %d %d \n", in->state, p->state);
+					for(int m = 0; m < p->nb_trans;m++)
+							{
+								printf("%d", label[m]);
+							}
+							printf("\n \n");
 					auto_add_new_transition(a, in->state, p->state, p->nb_trans, label);
 				}
 			}
-			while(e->next != NULL)
+			while(e2->next != NULL)
 			{
-				e = e->next;
-				in = ((path_c*) e->payload);
-				printf("\nState out : %d \n", in->state);
+				e2 = e2->next;
+				in = ((path_c*) e2->payload);
 				if(in->nb_trans == p->nb_trans)
 				{
 					
 					int equal = 1;
 					for(int k = 0; k < p->nb_trans/2 ; k++)
 					{
-						printf(" comp %u %u \t", in->tran_in[k], p->tran_out[k] );
 						if(in->tran_out[k] != p->tran_in[k])
 						{
 							equal = 0;
@@ -233,6 +231,12 @@ void new_comp(automaton* a, int order)
 							}
 
 						}
+						printf("ADDED %d %d \n", in->state, p->state);
+						for(int m = 0; m < p->nb_trans;m++)
+							{
+								printf("%d", label[m]);
+							}
+							printf("\n \n");
 						auto_add_new_transition(a, in->state, p->state, p->nb_trans, label);
 					}
 				}
@@ -240,30 +244,22 @@ void new_comp(automaton* a, int order)
 
 		}
 		
-		while(e->next != NULL)
+		while(e1->next != NULL)
 		{
-			p = ((path_c*) e->payload);
-		printf("State end %d : ", p->state );
-		for(int l = 0; l < p->nb_trans/2;l++)
-		{
-			printf(" %u / %u ", p->tran_in[l], p->tran_out[l]);
-
-		}
-			e = e->next;
-			p = ((path_c*) e->payload);
+			e1 = e1->next;
+			p = ((path_c*) e1->payload);
 			if(hasKey(path_in,p->key))
 			{
 				path_c* in;
-				hash_en* e = path_in->tab[i];
-				in = ((path_c*) e->payload);
+				hash_en* e2 = path_in->tab[i];
+				in = ((path_c*) e2->payload);
 				int equal = 1;
 				if(in->nb_trans == p->nb_trans)
 				{
-					printf("State out : %d \n", in->state);
 					for(int k = 0; k < p->nb_trans/2; k++)
 					{
-						printf("%u %u \t", in->tran_in[k], p->tran_out[k] );
-						if(in->tran_in[k] != p->tran_out[k])
+						
+						if(in->tran_out[k] != p->tran_in[k])
 						{
 							equal = 0;
 							break;
@@ -283,21 +279,27 @@ void new_comp(automaton* a, int order)
 							}
 
 						}
+						printf("ADDED %d %d \n", in->state, p->state);
+						for(int m = 0; m < p->nb_trans;m++)
+							{
+								printf("%d", label[m]);
+							}
+							printf("\n \n");
 						auto_add_new_transition(a, in->state, p->state, p->nb_trans, label);
 					}
 				}
-				while(e->next != NULL)
+				while(e2->next != NULL)
 				{
-					e = e->next;
-					in = ((path_c*) e->payload);
-					printf("\nState out : %d \n", in->state);
+
+					e2 = e2->next;
+					in = ((path_c*) e2->payload);
+					
 					if(in->nb_trans == p->nb_trans)
 					{
 						
 						int equal = 1;
 						for(int k = 0; k < p->nb_trans/2 ; k++)
 						{
-							printf(" comp %u %u \t", in->tran_in[k], p->tran_out[k] );
 							if(in->tran_out[k] != p->tran_in[k])
 							{
 								equal = 0;
@@ -318,6 +320,12 @@ void new_comp(automaton* a, int order)
 								}
 
 							}
+							printf("ADDED %d %d \n", in->state, p->state);
+							for(int m = 0; m < p->nb_trans;m++)
+							{
+								printf("%d", label[m]);
+							}
+							printf("\n \n");
 							auto_add_new_transition(a, in->state, p->state, p->nb_trans, label);
 						}
 					}
