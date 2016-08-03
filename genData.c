@@ -37,6 +37,14 @@ void genData(const int order, const int alph_max, const int* values, hash_tab* r
 		pattern* o = copyPattern(s->label);
 		outputState(o, order, values, alph_max, rules);
 		s->output = o;
+		while(e->next != NULL)
+		{
+			e = e->next;
+			statef* p1 = ((statef*) e->payload);
+			pattern* o1 = copyPattern(p1->label);
+			outputState(o1, order, values, alph_max, rules);
+			p1->output = o1;
+		}
 
 	}
 
@@ -330,7 +338,7 @@ void outputState(pattern* output, const int order, const int* value,const int ma
 	if(max <= max_alph)
 		return;
 	expand(output, order, value);
-	while(applyRules(rules, output, order) == 1)
+	while( applyRules(rules, output, order) == 1  )
 	{
 		expand(output, order, value);
 	}

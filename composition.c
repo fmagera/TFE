@@ -18,9 +18,6 @@ automaton * add_composant(automaton* a, int position, int ln, int alph_max)
 {
 	int init = 0;  
 	
-	
-	//uint1* added_state = calloc(auto_nb_states(a),sizeof(uint1));
-	//add_composant_rec(a, position, 0, init, alph_max, added_state, auto_nb_states(a));
 	automaton* uni = auto_new_empty(1);
 	if(!uni)
 		lash_perror("automaton creation");
@@ -105,6 +102,16 @@ automaton * compose(automaton* a, int ln_tr_a, automaton* b,int ln_tr_b, int alp
 		l_b++;
 	}	
 	automaton* result = auto_intersection(aprime, bprime);
+	int nb_to_project = (ln_tr_a+ ln_tr_b)-ln;
+	if(ln == ln_tr_a || ln == ln_tr_b)
+		nb_to_project = 0;
+	int l = ln;
+	for(int i = 0 ; i < nb_to_project; i ++)
+	{
+		result = auto_seq_projection_separ(result, l, ln_tr_a -1 -i, NULL);
+		l--;
+	}
+	
 	return result;
 }
 
@@ -116,7 +123,6 @@ void copy_transitions(automaton* a, uint4 s, uint4 d)
 	{
 		tran* t = auto_transition(a, s, i);
 		uint1 label = *auto_transition_label_ptr(t,1);
-		printf("\t %d", label);
 		auto_add_new_transition(a, d, auto_transition_dest(t), 1, &label); 
 	}
 }
@@ -125,7 +131,7 @@ void new_comp(automaton* a, int order)
 {
 	hash_tab* path_in = createhash_tab(pow(10,order));
 	hash_tab* path_out = createhash_tab(pow(10,order));
-	for(int j = 2; j <= order; j++)
+	for(int j = 1; j <= order; j++)
 	{
 		for(int i = 0; i < auto_nb_states(a); i++)
 		{
@@ -192,12 +198,6 @@ void new_comp(automaton* a, int order)
 						}
 
 					}
-					printf("ADDED %d %d \n", in->state, p->state);
-					for(int m = 0; m < p->nb_trans;m++)
-							{
-								printf("%d", label[m]);
-							}
-							printf("\n \n");
 					auto_add_new_transition(a, in->state, p->state, p->nb_trans, label);
 				}
 			}
@@ -231,12 +231,6 @@ void new_comp(automaton* a, int order)
 							}
 
 						}
-						printf("ADDED %d %d \n", in->state, p->state);
-						for(int m = 0; m < p->nb_trans;m++)
-							{
-								printf("%d", label[m]);
-							}
-							printf("\n \n");
 						auto_add_new_transition(a, in->state, p->state, p->nb_trans, label);
 					}
 				}
@@ -279,12 +273,6 @@ void new_comp(automaton* a, int order)
 							}
 
 						}
-						printf("ADDED %d %d \n", in->state, p->state);
-						for(int m = 0; m < p->nb_trans;m++)
-							{
-								printf("%d", label[m]);
-							}
-							printf("\n \n");
 						auto_add_new_transition(a, in->state, p->state, p->nb_trans, label);
 					}
 				}
@@ -320,12 +308,6 @@ void new_comp(automaton* a, int order)
 								}
 
 							}
-							printf("ADDED %d %d \n", in->state, p->state);
-							for(int m = 0; m < p->nb_trans;m++)
-							{
-								printf("%d", label[m]);
-							}
-							printf("\n \n");
 							auto_add_new_transition(a, in->state, p->state, p->nb_trans, label);
 						}
 					}
@@ -355,13 +337,11 @@ void get_path_out(automaton* a, uint4 state_st, uint4 steps_left, uint4* path, u
 			tran* t = auto_transition(a, path[i], trans[i]);
 			if(i%2)
 			{
-				printf(" SET OUT %d %u \n", i/2, *auto_transition_label_ptr(t,1));
 				tab_out[i/2] = *auto_transition_label_ptr(t,1);
 				
 			}
 			else
 			{
-				printf(" SET IN %d %u \n", i/2, *auto_transition_label_ptr(t,1));
 				tab_in[i/2] = *auto_transition_label_ptr(t,1);
 				
 				key += 3* (7* *auto_transition_label_ptr(t,1));
@@ -378,8 +358,6 @@ void get_path_out(automaton* a, uint4 state_st, uint4 steps_left, uint4* path, u
 		hash_en* e = malloc(sizeof(hash_en));
 		e->payload = p;
 		e->key = key;
-		printf("Key out : %d %d \n", state_st, key );
-
 		e->next = NULL;
 				
 		insertEntry(path_out,e, e->key);
@@ -420,7 +398,6 @@ void new_comp_rec(automaton *a, uint4 state_end, uint4 steps_left, uint4* path, 
 		uint1* tab_in = malloc(ini_nb_st/2);
 		uint1* tab_out = malloc(ini_nb_st/2);
 		int key = 0;
-		printf("SET INGO PATH State %d", state_end);
 		int rev = ini_nb_st/2 -1;
 		for(int i = 0 ; i < ini_nb_st; i++)
 		{
@@ -428,7 +405,6 @@ void new_comp_rec(automaton *a, uint4 state_end, uint4 steps_left, uint4* path, 
 
 			if(i%2)
 			{
-				printf(" SET IN %d %u \n", i/2, *auto_transition_label_ptr(t,1));
 				tab_in[rev-i/2] = *auto_transition_label_ptr(t,1);
 				
 				
@@ -436,7 +412,6 @@ void new_comp_rec(automaton *a, uint4 state_end, uint4 steps_left, uint4* path, 
 				
 			else
 			{
-				printf(" SET OUT %d %u \n", i/2, *auto_transition_label_ptr(t,1));
 				tab_out[rev-i/2] = *auto_transition_label_ptr(t,1);
 				key += 3* (7* *auto_transition_label_ptr(t,1));
 				
@@ -449,7 +424,6 @@ void new_comp_rec(automaton *a, uint4 state_end, uint4 steps_left, uint4* path, 
 		p->tran_out = tab_out;
 		p->state = state_end;
 		p->key = key;
-		printf("Key in : %d %d \n", state_end, key );
 
 		hash_en* e = malloc(sizeof(hash_en));
 		e->payload = p;

@@ -1,5 +1,64 @@
 #include "fib_add.h"
 
+automaton* trib_add(char* path)
+{
+	automaton* a = auto_new_empty(1);
+
+	FILE* f = fopen("msd_trib_addition.txt", "r");
+
+	if(f == NULL)
+		return NULL;
+	char trash[25];
+	uint4 tab[150];
+	int init = -1;
+	while(fgets(trash, 25, f) != NULL)
+	{
+		int state, accepting;
+		char *p = strchr(trash, '\n');
+		if((p-trash) < 10 && sscanf(trash, "%d %d \n", & state, & accepting) == 2)
+		{
+			auto_add_new_state(a, &tab[state] );
+			if(init < 0)
+			{
+				auto_add_new_i_state(a, tab[state]);
+				init = tab[state];
+				printf("st: %d\n", state);
+			}
+			if(accepting)
+				auto_mark_accepting_state(a,tab[state]);
+		}
+	}
+	rewind(f);
+	uint4 state;
+	while(fgets(trash, 25, f) != NULL)
+	{
+		char *p = strchr(trash, '\n');
+		int label[3];
+		uint1 label2[3];
+		int state_en = -1;
+		if(p-trash < 10)
+		{
+			sscanf(trash, "%d", &state);
+		}
+		else
+		{
+			if(sscanf(trash, "%d %d %d -> %d",  & label[0], & label[1], &label[2], &state_en))
+			{
+
+				label2[2] = (uint1) label[2];
+				label2[1] = (uint1) label[1];
+				label2[0] = (uint1) label[0];
+
+				auto_add_new_transition(a, tab[state], tab[state_en], 3, label2);
+			}
+		}
+	}
+
+	fclose(f);
+	return a;
+
+}
+
 automaton* fib_addition()
 {
 	automaton* a = auto_new_empty(1);

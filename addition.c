@@ -11,7 +11,6 @@ automaton* normalised(int order, int alph_max)
 	auto_add_new_i_state(a, init);
 	auto_mark_accepting_state(a,init);
 
-	printf("ok\n");
 	uint4 prev = init;
 	uint1 zero = 0;
 

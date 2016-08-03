@@ -12,7 +12,7 @@ automaton* end_normalize(hash_tab* states, int alph_max)
 
 	auto_add_new_i_state(a, init);
 	auto_mark_accepting_state(a, init);
-	for(int i = 0; i <= alph_max +2 ; i++)
+	for(int i = 0; i <= 2*alph_max  ; i++)
 	{
 		uint1 l[2] = {i,i};
 		if(auto_add_new_transition(a, init, init, 2, &l) != 0)
@@ -30,14 +30,14 @@ automaton* end_normalize(hash_tab* states, int alph_max)
 		if(getMax(s) > alph_max)
 		{
 			uint1 label[2];
-			uint4* next, prev = init;
+			uint4 next, prev = init;
 			for(int j = 0; j < s->size; j++ )
 			{
 				if(auto_add_new_state(a, & next)!= 0)
 					lash_perror("state creation");
-				label[0] = (uint1*) s->values[j];
-				label[1] = (uint1*) p->output->values[j];
-				if(auto_add_new_transition(a, prev, next, 2, & label) != 0)
+				label[0] = (uint1) s->values[j];
+				label[1] = (uint1) p->output->values[j];
+				if(auto_add_new_transition(a, prev, next, 2, label) != 0)
 					lash_perror("Tran creation");
 				prev = next;
 
@@ -46,6 +46,35 @@ automaton* end_normalize(hash_tab* states, int alph_max)
 
 
 		}
+		
+
+		while(e->next != NULL)
+		{
+			e = e->next;
+			p = ((statef*) e->payload);
+			s = p->label;
+
+			if(getMax(s) > alph_max)
+			{
+				uint1 label[2];
+				uint4 next, prev = init;
+				for(int j = 0; j < s->size; j++ )
+				{
+					if(auto_add_new_state(a, & next)!= 0)
+						lash_perror("state creation");
+					label[0] = (uint1) s->values[j];
+					label[1] = (uint1) p->output->values[j];
+					if(auto_add_new_transition(a, prev, next, 2, label) != 0)
+						lash_perror("Tran creation");
+					prev = next;
+
+				}
+				auto_mark_accepting_state(a, prev);
+				
+			}
+		}
+		
+
 	}
 	auto_minimize(a);
 	return a;
