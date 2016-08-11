@@ -15,6 +15,8 @@
 
 #include "composition.h"
 
+automaton* normalised(int order, int alph_max);
+
 automaton* addition(uint1 alph_max);
 
 automaton* l_normalize(int order);

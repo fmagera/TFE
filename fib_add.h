@@ -24,3 +24,6 @@
 #include "addition.h"
 
 automaton* fib_addition();
+
+
+automaton* trib_add(char* path);

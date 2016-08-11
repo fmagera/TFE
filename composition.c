@@ -31,11 +31,11 @@ automaton * add_composant(automaton* a, int position, int ln, int alph_max)
 
 	if(position == 0)
 	{
-		a = auto_seq_product_separ(uni, a, 1, ln-1, NULL);
+		a = auto_seq_product_separ(uni, a, 1, ln, NULL);
 	}
 	else
 	{
-		a = auto_seq_product_separ(a, uni, ln-1, 1, NULL);
+		a = auto_seq_product_separ(a, uni, ln, 1, NULL);
 	}
 	return a;	
 }
@@ -84,13 +84,19 @@ void add_composant_rec(automaton* a, int position, int count, uint4 curr, int al
 
 }
 
+/*
+* ln is the initial length of the automaton resulting from the intersection.
+* it indicates how much each alphabet should be prolonged.
+*
+*/
 automaton * compose(automaton* a, int ln_tr_a, automaton* b,int ln_tr_b, int alph, int ln)
 {
+	// prolongation of both alphabets if necessary
 	int l_a = ln_tr_a;
 	automaton* aprime = a;
 	while(l_a < ln)
 	{
-		aprime = add_composant(aprime, l_a, l_a+1, alph);
+		aprime = add_composant(aprime, l_a, l_a, alph);
 		l_a++;
 	}
 	
@@ -98,10 +104,12 @@ automaton * compose(automaton* a, int ln_tr_a, automaton* b,int ln_tr_b, int alp
 	automaton* bprime = b;
 	while(l_b < ln)
 	{
-		bprime = add_composant(bprime, 0, l_b+1, alph);
+		bprime = add_composant(bprime, 0, l_b, alph);
 		l_b++;
-	}	
+	}
+	// intersection	
 	automaton* result = auto_intersection(aprime, bprime);
+	// projection
 	int nb_to_project = (ln_tr_a+ ln_tr_b)-ln;
 	if(ln == ln_tr_a || ln == ln_tr_b)
 		nb_to_project = 0;
@@ -126,7 +134,9 @@ void copy_transitions(automaton* a, uint4 s, uint4 d)
 		auto_add_new_transition(a, d, auto_transition_dest(t), 1, &label); 
 	}
 }
-
+/*
+*
+*/
 void new_comp(automaton* a, int order)
 {
 	hash_tab* path_in = createhash_tab(pow(10,order));

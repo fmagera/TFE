@@ -1,4 +1,4 @@
-//#define TEST_AUTO
+#define TEST_AUTO
 //#define TEST_COMPO
 //#define TEST_TEST_AUTO
 //#define TEST_ADD
@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <time.h>
 
 
 #include "lash.h"
@@ -52,6 +53,7 @@ automaton* accept_all_size(int alph_max, int size_max);
 int main(int argc, char *argv[])
 {
 
+	float tim = clock();
 	if(argc < 3)
 		return 1;
 	
@@ -238,36 +240,20 @@ int main(int argc, char *argv[])
 #endif
 	 
 #ifdef TEST_AUTO
-	automaton* next = auto_copy(base);
-	add_identity(next, 3, order);
-	final_accepting(next, 3);
-	base = auto_copy(next);
-	auto_minimize(next);
+	
+	automaton* copy = auto_copy(base);
+	add_loop(copy,3);
+	
+	auto_minimize(copy);
+	new_comp(copy, order);
+	auto_minimize(copy);
+	copy = auto_unserialize(copy, 2, NULL);
+	//next  = auto_unserialize(next, 2, NULL);
 
-	for(int k = 1; k <= 2*order; k++)
-	{
-
-		automaton* dec = decalage(base, k, 3);
-		
-		auto_minimize(dec);
-		next = compose(next,2, dec,2, 3, 3);
-		auto_minimize(next);
-
-		next = auto_seq_projection_separ(next, 3, 1, NULL);
-		auto_minimize(next);
-		
-	}
-	add_loop(next,3);
-	auto_prune(next);
-	auto_minimize(next);
-	next2  = auto_unserialize(next, 2, NULL);
-	auto_minimize(next2);
-	printf("number of compo %d \n", auto_nb_states(next2));
-	auto_serialize_write_dot_file(next2, "result.dot", LASH_EXP_DIGIT);
-	uint1 word[23] = {0,0,0,0,0,0,0,0,0,0,1,1, 0, 0, 2, 0,1, 1, 1,0, 2, 0,1};
-	//scanf("%6c", word);
-	automaton* b = test_automata(next, word, 23, order);
-	auto_serialize_write_dot_file(b, "test.dot", LASH_EXP_DIGIT);
+	//printf("number of compo %d \n", auto_nb_states(next));
+	//auto_serialize_write_dot_file(next, "result.dot", LASH_EXP_DIGIT);
+	auto_serialize_write_dot_file(copy, "nc.dot", LASH_EXP_DIGIT);
+	
 	
 #ifdef TEST_TEST_AUTO
 	uint1 word[6] = {0,0,2,2,2,0};
@@ -404,7 +390,7 @@ int main(int argc, char *argv[])
 	uint1 w2[10] = {0,0, 1,0,1,0,1,0,1,0};
 	//scanf("%6c", word);
 	automaton* b = test_automata2(result, w1,10,w2,10, order);
-	automaton* c = test_automata2(trib, w1,10,w2,10, order);
+	//automaton* c = test_automata2(trib, w1,10,w2,10, order);
 
 	auto_serialize_write_dot_file(b, "test.dot", LASH_EXP_DIGIT);
 	//auto_serialize_write_dot_file(c, "test2.dot", LASH_EXP_DIGIT);
@@ -456,6 +442,8 @@ int main(int argc, char *argv[])
 	freehash_tab(transitions);
 
 
+	float tim2 = clock();
+	printf("Temps d'execution : %d\n", tim2-tim );
 	exit(0);
 
 }

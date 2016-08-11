@@ -122,18 +122,23 @@ void genRules(const int alphMax, const int order, const int* values, hash_tab* t
 				for(int n = 0; n < left->size-1; n++)
 				{
 					// collisions et unicite !!
-					statef* st = malloc(sizeof(statef));
-					st->label = prefix_left[n];
-					st->output = NULL;
-					st->nb = -1;
+					int key =  hashKey(states->capacity, prefix_left[n]);
+					if(! existState(states,prefix_left[n], key ))
+					{
+						statef* st = malloc(sizeof(statef));
+						st->label = prefix_left[n];
+						st->output = NULL;
+						st->nb = -1;
 
 
-					hash_en* entry = malloc(sizeof(hash_en));
-					entry->payload = st;
-					entry->key = hashKey(states->capacity, prefix_left[n]);
-					entry->next = NULL;
-					if(! existState(states,prefix_left[n], entry->key ))
-						insertEntry(states, entry, entry->key );
+						hash_en* entry = malloc(sizeof(hash_en));
+						entry->payload = st;
+						entry->key = key;
+						entry->next = NULL;
+					
+						insertEntry(states, entry, entry->key );	
+					}
+					
 				}
 				
 			}
@@ -221,17 +226,22 @@ void genRules(const int alphMax, const int order, const int* values, hash_tab* t
 						
 						for(int k = 0; k < left2->size - 1; k++)
 						{
-							statef* st = malloc(sizeof(statef));
-							st->label = prefixes_st[k];
-							st->output = NULL;
-							st->nb = -1;
+							int key = hashKey(states->capacity, prefixes_st[k]);
+							if(!existState(states, prefixes_st[k], key))
+							{
+								statef* st = malloc(sizeof(statef));
+								st->label = prefixes_st[k];
+								st->output = NULL;
+								st->nb = -1;
 
-							hash_en* entry = malloc(sizeof(hash_en));
-							entry->payload = st;
-							entry->key = hashKey(states->capacity, prefixes_st[k]);
-							entry->next = NULL;
-							if(!existState(states, prefixes_st[k], entry->key))
+								hash_en* entry = malloc(sizeof(hash_en));
+								entry->payload = st;
+								entry->key = key;
+								entry->next = NULL;
+							
 								insertEntry(states, entry, entry->key);
+							}
+							
 							
 						}
 						freePattern(nuprime);				
