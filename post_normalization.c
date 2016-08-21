@@ -105,178 +105,10 @@ int main(int argc, char *argv[])
 	automaton* base = auto_product_union(a1, a2);
 	auto_minimize(base);
 
+	auto_free(a1);
+	auto_free(a2);
 
 
-	
-#ifdef TEST_COMPO
-	automaton* l_nor = l_normalize(order);
-	add_loop(base, 3);
-	auto_minimize(base);
-	auto_serialize_write_dot_file(base, "base_bef.dot", LASH_EXP_DIGIT);
-	new_comp(base, order);
-	//auto_minimize(base);
-	/*
-	uint4 in_st = 0;
-	auto_i_state(base,0, & in_st);
-	for(int i = 0 ; i < 2*alph_max+2; i++)
-	{
-		auto_add_new_transition(base, in_st, in_st, 2, createLabel(i,i));
-	}
-	*/
-	//auto_minimize(base);
-	//base = auto_unserialize(base, 2, NULL);
-	auto_serialize_write_dot_file(base, "base_comp.dot", LASH_EXP_DIGIT);
-
-
-#endif 
-#ifdef CHECH_RULES
-	for(int i = 0; i < rules->capacity; i++)
-	{
-		if(rules->tab[i] == NULL)
-			continue;
-		rule* p;
-		hash_en* e = rules->tab[i];
-		p = ((rule*) e->payload);
-		pattern* s = p->left;
-		if(getMax(s) > alph_max)
-		{
-			uint1 label[2];
-			uint4* next, prev = init;
-			for(int j = 0; j < s->size; j++ )
-			{
-				if(auto_add_new_state(a, & next)!= 0)
-					lash_perror("state creation");
-				label[0] = (uint1*) s->values[j];
-				label[1] = (uint1*) p->output->values[j];
-				if(auto_add_new_transition(a, prev, next, 2, & label) != 0)
-					lash_perror("Tran creation");
-				prev = next;
-
-			}
-			auto_mark_accepting_state(a, prev);
-
-
-		}
-	}
-#endif
-#ifdef TEST_ADD
-	automaton* addit = addition(alph_max);
-	automaton* nor1 = normalised(order, alph_max);
-	automaton* nor2 = normalised(order, alph_max);
-	automaton* nor3 = auto_seq_product_separ(nor1, nor2,1,1,NULL);
-	auto_minimize(nor3);
-	auto_serialize_write_dot_file(nor3, "nor3.dot", LASH_EXP_DIGIT);
-
-	automaton* add_bis = compose(nor3, 2, addit, 3, alph_max+1, 3); 
-	auto_minimize(add_bis);
-	auto_serialize_write_dot_file(add_bis, "add_bis.dot", LASH_EXP_DIGIT);
-	automaton* r_nor = r_normalize(order);
-	auto_serialize_write_dot_file(r_nor, "r_nor.dot", LASH_EXP_DIGIT);
-		auto_minimize(r_nor);
-		
-	automaton* l_nor = l_normalize(order);
-	
-	auto_minimize(l_nor);
-	
-	automaton* normalizer = compose(l_nor, 2, r_nor, 2,3,3);
-	auto_minimize(normalizer);
-
-	automaton* en = end_normalize(states, alph_max);
-	
-	auto_minimize(en);
-	en = auto_unserialize(en, 2, NULL);
-	normalizer = auto_unserialize(normalizer, 2, NULL);
-	r_nor = auto_unserialize(r_nor, 2, NULL);
-	l_nor = auto_unserialize(l_nor, 2, NULL);
-	addit = auto_unserialize(addit, 3, NULL);
-	nor3 = auto_unserialize(nor3, 2, NULL);
-	add_bis = auto_unserialize(add_bis, 3, NULL);
-
-	auto_serialize_write_dot_file(addit, "addit_simple.dot", LASH_EXP_DIGIT);
-	auto_serialize_write_dot_file(nor1, "normalized.dot", LASH_EXP_DIGIT);
-	auto_serialize_write_dot_file(nor3, "norma_carte.dot", LASH_EXP_DIGIT);
-	auto_serialize_write_dot_file(add_bis, "add_nor.dot", LASH_EXP_DIGIT);
-	auto_serialize_write_dot_file(en, "en.dot", LASH_EXP_DIGIT);
-	auto_serialize_write_dot_file(l_nor, "l_nor.dot", LASH_EXP_DIGIT);
-	auto_serialize_write_dot_file(normalizer, "nor.dot", LASH_EXP_DIGIT);	
-	//auto_serialize_write_dot_file(l_nor, "ln.dot", LASH_EXP_DIGIT);
-	auto_minimize(a2);
-	a2 = auto_unserialize(a2, 2, NULL);
-	auto_serialize_write_dot_file(a2, "red.dot", LASH_EXP_DIGIT);
-	auto_minimize(a1);
-	a1 = auto_unserialize(a1, 2, NULL);
-	auto_serialize_write_dot_file(a1, "un.dot", LASH_EXP_DIGIT);
-	base = auto_unserialize(base, 2, NULL);
-	auto_serialize_write_dot_file(base, "base.dot", LASH_EXP_DIGIT);
-	automaton* trib = trib_add(" ");
-	auto_serialize_write_dot_file(trib, "trib1.dot", LASH_EXP_DIGIT);
-	auto_minimize(trib);
-	// TEST on 2 inputs
-	uint1 w1[10] = {0,0, 1,0,1,0,1,0,1,0};
-	uint1 w2[10] = {0,0, 1,0,1,0,1,0,1,0};
-	//scanf("%6c", word);
-	automaton* c = test_automata2(trib, w1,10,w2,10, order);
-	auto_serialize_write_dot_file(c, "test_trib.dot", LASH_EXP_DIGIT);
-	trib = auto_unserialize(trib, 3, NULL);
-	auto_serialize_write_dot_file(trib, "trib.dot", LASH_EXP_DIGIT);
-
-#endif	
-#ifdef TEST_MAX_SIZE
-	automaton* next = auto_copy(base);
-	add_identity(next, 3, order);
-	add_loop(next, 3);
-
-	auto_minimize(next);
-	automaton* n = auto_unserialize(next, 2,NULL);
-	auto_serialize_write_dot_file(n, "base.dot", LASH_EXP_DIGIT);
-	automaton* bis = auto_unserialize(base, 2,NULL);
-
-	auto_serialize_write_dot_file(bis, "basebef.dot", LASH_EXP_DIGIT);
-#endif
-#ifdef END_NOR
-	automaton* en = end_normalize(states, alph_max);
-	en = auto_unserialize(en, 2, NULL);
-	auto_serialize_write_dot_file(en, "en.dot", LASH_EXP_DIGIT);	
-#endif
-	 
-#ifdef TEST_AUTO
-	
-	automaton* copy = auto_copy(base);
-	add_loop(copy,3);
-	
-	auto_minimize(copy);
-	new_comp(copy, order);
-	auto_minimize(copy);
-	copy = auto_unserialize(copy, 2, NULL);
-	//next  = auto_unserialize(next, 2, NULL);
-
-	//printf("number of compo %d \n", auto_nb_states(next));
-	//auto_serialize_write_dot_file(next, "result.dot", LASH_EXP_DIGIT);
-	auto_serialize_write_dot_file(copy, "nc.dot", LASH_EXP_DIGIT);
-	
-	
-#ifdef TEST_TEST_AUTO
-	uint1 word[6] = {0,0,2,2,2,0};
-	//scanf("%6c", word);
-	automaton* b = test_automata(next, word, 6, order);
-
-	// automaton which accepts only the aimed alphabet
-	automaton* limited = auto_new_empty(1);
-	uint4* i_st = 0;
-	auto_add_new_state(limited, & i_st);
-	auto_add_new_i_state(limited, i_st);
-	auto_mark_accepting_state(limited, i_st);
-	uint1 zer = 0, one = 1, two = 2;
-	auto_add_new_transition(limited, i_st, i_st, 1, &zer );
-	auto_add_new_transition(limited, i_st, i_st, 1, &one );
-	//auto_add_new_transition(limited, i_st, i_st, 1, &two );
-
-
-	automaton* limit_alph = auto_intersection(b, limited);
-	auto_minimize(limit_alph);
-	auto_serialize_write_dot_file(limit_alph, "limit.dot", LASH_EXP_DIGIT);
-#endif
-#endif
 
 #ifdef TEST_INTE
 
@@ -285,8 +117,11 @@ int main(int argc, char *argv[])
 	automaton* nor2 = normalised(order, alph_max);
 	automaton* nor3 = auto_seq_product_separ(nor1, nor2,1,1,NULL);
 	auto_minimize(nor3);
+	auto_free(nor1);
+	auto_free(nor2);
 
 	addit = compose(nor3, 2, addit, 3, alph_max+1, 3); 
+	auto_free(nor3);
 
 	automaton* r_nor = r_normalize(order);
 	automaton* l_nor = l_normalize(order);
@@ -297,17 +132,24 @@ int main(int argc, char *argv[])
 
 	automaton* normalizer = compose(l_nor, 2, r_nor, 2,alph_max,3);
 	auto_minimize(normalizer);
-	//normalizer = auto_seq_projection_separ(normalizer, 3, 1, NULL);
-	auto_minimize(normalizer);	
+	auto_free(r_nor);
+	auto_free(l_nor);
 
 	automaton* en = end_normalize(states, alph_max);
 	auto_minimize(en);
 	
 	// extended normalization part
 	automaton* next = auto_copy(base);
+	auto_free(base);
 	add_loop(next, 3);
 	auto_minimize(next);
 	new_comp(next, order);
+	auto_minimize(next);
+	automaton* nc = auto_copy(next);
+	nc = auto_unserialize(nc, 2, NULL);
+	auto_serialize_write_dot_file(nc, "nc.dot", LASH_EXP_DIGIT);
+	auto_free(nc);
+
 	uint4 in_st = 0;
 	auto_i_state(next,0, & in_st);
 	for(int i = 0 ; i < 2*alph_max+2; i++)
@@ -320,10 +162,9 @@ int main(int argc, char *argv[])
 	next = compose(next, 2, en, 2, 3, 3);
 	//next = auto_seq_projection_separ(next, 3, 1, NULL);
 	auto_minimize(next);
+	auto_free(en);
 	printf("Post nor added %d \n", auto_nb_states(next));
-	automaton* ext_nor = auto_copy(next);
-	ext_nor = auto_unserialize(ext_nor, 2, NULL);
-	auto_serialize_write_dot_file(ext_nor, "nor_ext.dot",LASH_EXP_DIGIT);
+
 
 	// Composition of the extended normalization automaton, should be done m times
 	
@@ -342,7 +183,8 @@ int main(int argc, char *argv[])
 	uint1 word[10] = {0,0, 2,0,2,0,2,0,2,0};
 	automaton* normalize_test = test_automata(next, word, 10, order);
 	auto_serialize_write_dot_file(normalize_test, "nor_test.dot",LASH_EXP_DIGIT);
-	
+	auto_free(next);
+	auto_free(normalize_test);
 
 	// Building the final automaton
 	result = compose(addit, 3, result, 2, 2*alph_max, 4);
@@ -353,6 +195,8 @@ int main(int argc, char *argv[])
 	//result = auto_seq_projection_separ(result, 4, 2, NULL);
 	auto_minimize(result);
 	printf("Final number of states : %d \n", auto_nb_states(result));
+	auto_free(addit);
+	auto_free(normalizer);
 	
 #ifdef TEST_TRIB
 	automaton* fib = fib_addition();
@@ -370,6 +214,9 @@ int main(int argc, char *argv[])
 
 	auto_serialize_write_dot_file(dif, "dif.dot", LASH_EXP_DIGIT);
 	printf("%d \n",auto_nb_states(dif));
+	auto_free(fib);
+	auto_free(trib);
+	auto_free(dif);
 
 #endif
 #ifdef TEST_FIB
@@ -384,6 +231,8 @@ int main(int argc, char *argv[])
 
 	auto_serialize_write_dot_file(dif, "dif.dot", LASH_EXP_DIGIT);
 	printf("%d \n",auto_nb_states(dif));
+	auto_free(fib);
+	auto_free(dif);
 #endif
 	// TEST on 2 inputs
 	uint1 w1[10] = {0,0, 1,0,1,0,1,0,1,0};
@@ -394,6 +243,7 @@ int main(int argc, char *argv[])
 
 	auto_serialize_write_dot_file(b, "test.dot", LASH_EXP_DIGIT);
 	//auto_serialize_write_dot_file(c, "test2.dot", LASH_EXP_DIGIT);
+	auto_free(b);
 	
 	/*
 	result = auto_seq_projection_separ(result, 3, 0, NULL);
@@ -402,6 +252,7 @@ int main(int argc, char *argv[])
 	*/
 	result = auto_unserialize(result, 3, NULL);
 	auto_serialize_write_dot_file(result, "addition.dot", LASH_EXP_DIGIT);
+	auto_free(result);
 	
 
 #endif

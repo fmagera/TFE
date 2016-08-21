@@ -4,7 +4,7 @@ void genData(const int order, const int alph_max, const int* values, hash_tab* r
 {
 	genRules(alph_max, order, values, rules, states);
 
-
+	/*
 	for(int i = 0; i < states->capacity; i++)
 	{
 		if(states->tab[i] == NULL)
@@ -26,6 +26,7 @@ void genData(const int order, const int alph_max, const int* values, hash_tab* r
 		}
 
 	}
+	*/
 	
 	for(int i = 0; i < states->capacity; i++)
 	{
@@ -106,8 +107,6 @@ void genRules(const int alphMax, const int order, const int* values, hash_tab* t
 				new_rule->left = left;
 				new_rule->right = right;
 				
-				
-			
 				
 				hash_en* e = malloc(sizeof(hash_en));
 				e->payload = new_rule;
