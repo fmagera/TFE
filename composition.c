@@ -37,6 +37,7 @@ automaton * add_composant(automaton* a, int position, int ln, int alph_max)
 	{
 		a = auto_seq_product_separ(a, uni, ln, 1, NULL);
 	}
+	auto_free(uni);
 	return a;	
 }
 
@@ -273,7 +274,7 @@ void new_comp(automaton* a, int order)
 					if(equal)
 					{
 						uint1* label = malloc(p->nb_trans);
-						for(int k = 0; k < 2*p->nb_trans; k++)
+						for(int k = 0; k < p->nb_trans; k++)
 						{
 							if(k%2 == 0)
 								label[k] = in->tran_in[k/2];
@@ -336,7 +337,8 @@ void new_comp(automaton* a, int order)
 
 void get_path_out(automaton* a, uint4 state_st, uint4 steps_left, uint4* path, uint4* trans, uint4 ini_nb_st, hash_tab* path_out, uint4* visited)
 {
-	visited[ini_nb_st-steps_left] = state_st;
+	if(steps_left != 0)
+		visited[ini_nb_st-steps_left] = state_st;
 	if(steps_left == 0)
 	{
 		uint1* tab_in = malloc(ini_nb_st/2);
@@ -402,7 +404,8 @@ void get_path_out(automaton* a, uint4 state_st, uint4 steps_left, uint4* path, u
 
 void new_comp_rec(automaton *a, uint4 state_end, uint4 steps_left, uint4* path, uint4* trans, uint4 ini_nb_st, hash_tab* path_in, uint4* visited)
 {
-	visited[ini_nb_st-steps_left] = state_end;
+	if(steps_left != 0)
+		visited[ini_nb_st-steps_left] = state_end;
 	if(steps_left == 0)
 	{
 		uint1* tab_in = malloc(ini_nb_st/2);
