@@ -1,3 +1,11 @@
+/*************************************************************************************************
+*
+*		composition.c: contains functions to make the composition of two automata and 
+*						implements the new method to nest rules
+*
+*
+**************************************************************************************************/
+
 #include "composition.h"
 
 uint1* createLabel(uint1 in, uint1 out)
@@ -41,49 +49,7 @@ automaton * add_composant(automaton* a, int position, int ln, int alph_max)
 	return a;	
 }
 
-void add_composant_rec(automaton* a, int position, int count, uint4 curr, int alph_max, uint1* added, int space)
-{
-	int nb_out;
-	uint4 init;
-	auto_i_state(a, 0, &init);
 
-	if(count % 3 == position && added[curr] == 0)
-	{
-		uint4 new = 0;
-		auto_add_new_state(a, &new);
-		copy_transitions(a, curr, new);
-		auto_remove_trans(a, curr);
-		for(uint1 i = 0; i <= alph_max; i++)
-		{
-			auto_add_new_transition(a, curr, new, 1, &i) ;
-		}
-		if(auto_accepting_state(a, curr) && position != 0)
-		{
-			auto_unmark_accepting_state(a, curr);
-			auto_mark_accepting_state(a, new);
-		}
-		if(curr == init && position != 0)
-		{
-			auto_remove_i_states(a);
-			auto_add_new_i_state(a, new);
-		}
-		added[curr] = 1;
-
-		curr = new;
-		count++;
-	}
-	auto_nb_out_transitions(a, curr, &nb_out);
-	if(nb_out == 0)
-		return;
-	if(count != 0 && auto_accepting_state(a, curr) )
-		return;
-	for(int i = 0; i < nb_out; i++)
-	{
-		tran* t = auto_transition(a, curr, i);
-		add_composant_rec(a, position, count+1, auto_transition_dest(t), alph_max, added, space);
-	}
-
-}
 
 /*
 * ln is the initial length of the automaton resulting from the intersection.
@@ -136,7 +102,7 @@ void copy_transitions(automaton* a, uint4 s, uint4 d)
 	}
 }
 /*
-*
+* New method to merge transitions from a synchronous transducer 
 */
 void new_comp(automaton* a, int order)
 {
@@ -155,7 +121,7 @@ void new_comp(automaton* a, int order)
 				uint4* trans1 = calloc(2*j, sizeof(uint4));
 				uint4* visited = calloc(2*j, sizeof(uint4));
 				uint4* visited1 = calloc(2*j, sizeof(uint4));
-				new_comp_rec(a, i, 2*j, path, trans, 2*j, path_in, visited);
+				get_path_in(a, i, 2*j, path, trans, 2*j, path_in, visited);
 				get_path_out(a, i, 2*j, path1, trans1, 2*j, path_out, visited1 );
 				free(path);
 				free(trans);
@@ -334,7 +300,9 @@ void new_comp(automaton* a, int order)
 	freehash_tab(path_out);
 	
 }
-
+/*
+* Function to find recursively the paths outgoing from the initial state, of length ini_nb_st
+*/
 void get_path_out(automaton* a, uint4 state_st, uint4 steps_left, uint4* path, uint4* trans, uint4 ini_nb_st, hash_tab* path_out, uint4* visited)
 {
 	if(steps_left != 0)
@@ -402,7 +370,10 @@ void get_path_out(automaton* a, uint4 state_st, uint4 steps_left, uint4* path, u
 	}
 }
 
-void new_comp_rec(automaton *a, uint4 state_end, uint4 steps_left, uint4* path, uint4* trans, uint4 ini_nb_st, hash_tab* path_in, uint4* visited)
+/*
+* Function to find recursively the paths coming to the initial state, of length ini_nb_st
+*/
+void get_path_in(automaton *a, uint4 state_end, uint4 steps_left, uint4* path, uint4* trans, uint4 ini_nb_st, hash_tab* path_in, uint4* visited)
 {
 	if(steps_left != 0)
 		visited[ini_nb_st-steps_left] = state_end;
@@ -471,7 +442,7 @@ void new_comp_rec(automaton *a, uint4 state_end, uint4 steps_left, uint4* path, 
 			{
 				path[ini_nb_st-steps_left] = i;
 				trans[ini_nb_st-steps_left] = j;
-				new_comp_rec(a, i, steps_left-1, path, trans, ini_nb_st, path_in, visited );
+				get_path_in(a, i, steps_left-1, path, trans, ini_nb_st, path_in, visited );
 			}
 		}
 	}

@@ -1,3 +1,11 @@
+/*************************************************************************************************
+*
+*		composition.h : contains functions to make the composition of two automata and 
+*						implements the new method to nest rules
+*
+*
+**************************************************************************************************/
+
 #ifndef _COMPO
 #define _COMPO
 
@@ -33,14 +41,13 @@ automaton * compose(automaton* a, int ln_tr_a, automaton* b,int len_tr_b, int al
 
 void add_composant_rec(automaton* a, int position, int count, uint4 curr, int alph_max, uint1* added, int space);
 
-
 uint1* createLabel(uint1 in, uint1 out);
 
 void copy_transitions(automaton* a, uint4 s, uint4 d);
 
 void new_comp(automaton* a, int order);
 
-void new_comp_rec(automaton *a, uint4 state_end, uint4 steps_left, uint4* path, uint4* trans, uint4 ini_nb_st, hash_tab* path_in,  uint4* visited);
+void get_path_in(automaton *a, uint4 state_end, uint4 steps_left, uint4* path, uint4* trans, uint4 ini_nb_st, hash_tab* path_in,  uint4* visited);
 
 void get_path_out(automaton* a, uint4 state_st, uint4 steps_left, uint4* path, uint4* trans, uint4 ini_nb_st, hash_tab* path_out, uint4* visited);
 

@@ -1,4 +1,6 @@
-
+/*
+* 	Functions for creating the fibonacci and Tribonacci addtion automata found in Walnut
+*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>

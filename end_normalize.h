@@ -1,3 +1,6 @@
+/*
+* 	Functions for post normalization and normalization operations
+*/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -24,3 +27,7 @@
 #include "addition.h"
 
 automaton* end_normalize(hash_tab* states, int alph_max);
+
+automaton* l_normalize(int order);
+
+automaton* r_normalize(int order);

@@ -1,3 +1,8 @@
+/*
+* 	Functions for creating the fibonacci and Tribonacci addtion automata found in Walnut
+*/
+
+
 #include "fib_add.h"
 
 automaton* trib_add(char* path)

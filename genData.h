@@ -1,3 +1,8 @@
+/*
+*	Functions to generate the data needed to create the transducer described by Frougny. 
+*
+*/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>

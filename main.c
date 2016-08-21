@@ -1,6 +1,4 @@
-#define TEST_INTE
-//#define TEST_FIB
-#define TEST_TRIB
+
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -38,7 +36,6 @@
 int main(int argc, char *argv[])
 {
 
-	float tim = clock();
 	if(argc < 3)
 		return 1;
 	
@@ -95,8 +92,6 @@ int main(int argc, char *argv[])
 
 
 
-#ifdef TEST_INTE
-
 	automaton* addit = addition(alph_max);
 	automaton* nor1 = normalised(order, alph_max);
 	automaton* nor2 = normalised(order, alph_max);
@@ -122,6 +117,10 @@ int main(int argc, char *argv[])
 
 	automaton* en = end_normalize(states, alph_max);
 	auto_minimize(en);
+	automaton* en3 = auto_copy(en);
+	en3 = auto_unserialize(en3, 2, NULL);
+	auto_serialize_write_dot_file(en3, "Dot\ and\ images/en3.dot",LASH_EXP_DIGIT);
+	auto_free(en3);
 	
 	// extended normalization part
 	automaton* next = auto_copy(base);
@@ -130,10 +129,6 @@ int main(int argc, char *argv[])
 	auto_minimize(next);
 	new_comp(next, order);
 	auto_minimize(next);
-	automaton* nc = auto_copy(next);
-	nc = auto_unserialize(nc, 2, NULL);
-	auto_serialize_write_dot_file(nc, "nc.dot", LASH_EXP_DIGIT);
-	auto_free(nc);
 
 	uint4 in_st = 0;
 	auto_i_state(next,0, & in_st);
@@ -153,65 +148,69 @@ int main(int argc, char *argv[])
 	// Composition of the extended normalization automaton, should be done m times
 	
 	automaton* result = auto_copy(next);
-	for(int i = 0; i < order-1; i++)
+	for(int i = 0; i < order/4; i++)
 	{
 		result = compose(result, 2, next, 2, 3, 3 );
 		auto_minimize(result);
 		printf("%d %d \n", i, auto_nb_states(result));
 	}
 	printf("Composition m times done \n");
+	
+
+	automaton* result2 = auto_copy(result);
+	result = compose(addit, 3, result, 2, 2*alph_max, 4);
+	auto_minimize(result);
+	if(order % 2)
+		result = compose(result, 3, next, 2, 3, 4 );
 
 
+	result2 = compose(result2, 2, normalizer, 2, 2*alph_max, 3);
+	auto_minimize(result2);
+	result = compose(result, 3, result2, 2, 2*alph_max, 4);
+	auto_minimize(result);
+	printf("Final number of states : %d \n", auto_nb_states(result));
+	
 	// TEST 
 	uint1 word[10] = {0,0, 2,0,2,0,2,0,2,0};
 	automaton* normalize_test = test_automata(next, word, 10, order);
-	auto_serialize_write_dot_file(normalize_test, "nor_test.dot",LASH_EXP_DIGIT);
+	auto_serialize_write_dot_file(normalize_test, "Dot\ and\ images/nor_test.dot",LASH_EXP_DIGIT);
 	auto_free(next);
 	auto_free(normalize_test);
-
-	// Building the final automaton
-	result = compose(addit, 3, result, 2, 2*alph_max, 4);
-	auto_minimize(result);
-	// Final normalization
-	result = compose(result, 3, normalizer, 2, alph_max, 4);
-	auto_minimize(result);
-	printf("Final number of states : %d \n", auto_nb_states(result));
+	auto_free(result2);
 	auto_free(addit);
 	auto_free(normalizer);
 	
-#ifdef TEST_TRIB
+	
+	if(order == 3)
+	{
+		automaton* trib = trib_add("msd_trib_addition.txt");
+		auto_minimize(trib);
+		if(auto_equality(trib,result) == 1)
+			printf("SUCCEEEESSS\n");
+		auto_free(trib);
+	}
+	else if(order == 2)
+	{
+		automaton* fib = fib_addition();
+		auto_minimize(fib);
+		if(auto_equality(fib,result) == 1)
+			printf("SUCCEEEESSS\n");
 
-	automaton* trib = trib_add("msd_trib_addition.txt");
-	if(trib != NULL)
-		auto_serialize_write_dot_file(trib, "trib.dot", LASH_EXP_DIGIT);
-	auto_minimize(trib);
-	if(auto_equality(trib,result) == 1)
-		printf("SUCCEEEESSS\n");
-
-	auto_free(trib);
-
-#endif
-#ifdef TEST_FIB
-	automaton* fib = fib_addition();
-	auto_minimize(fib);
-	if(auto_equality(fib,result) == 1)
-		printf("SUCCEEEESSS\n");
-
-	auto_free(fib);
-#endif
+		auto_free(fib);
+	}
+	
 	// TEST on 2 inputs
 	uint1 w1[10] = {0,0, 1,0,1,0,1,0,1,0};
 	uint1 w2[10] = {0,0, 1,0,1,0,1,0,1,0};
 	automaton* b = test_automata2(result, w1,10,w2,10, order);
-	auto_serialize_write_dot_file(b, "test.dot", LASH_EXP_DIGIT);
+	auto_serialize_write_dot_file(b, "Dot\ and\ images/test.dot", LASH_EXP_DIGIT);
 	auto_free(b);
 
 	result = auto_unserialize(result, 3, NULL);
-	auto_serialize_write_dot_file(result, "addition.dot", LASH_EXP_DIGIT);
+	auto_serialize_write_dot_file(result, "Dot\ and\ images/addition.dot", LASH_EXP_DIGIT);
 	auto_free(result);
 	
 
-#endif
 	
 	if (lash_end() < 0)
 	    lash_perror("lash_end");
@@ -248,10 +247,7 @@ int main(int argc, char *argv[])
 	}
 	freehash_tab(transitions);
 
-
-	float tim2 = clock();
-	printf("Temps d'execution : %d\n", tim2-tim );
-	exit(0);
+	return 0;
 
 }
 

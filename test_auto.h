@@ -1,3 +1,12 @@
+/*************************************************************************************************
+*
+*		test_auto.h : contains functions to compute the product of automata with
+*						transducers, used for testing
+*
+*
+**************************************************************************************************/
+
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>

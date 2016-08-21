@@ -39,6 +39,7 @@ void freeStatef(statef* s)
 	free(s);
 }
 
+// Function to increment a pattern
 int incPat(pattern* p, const int alph_max)
 {
 		for(int i = p->size-1; i >= 0; i--)
@@ -73,6 +74,7 @@ pattern* append( const pattern* p, const int i)
 	return copy;
 }
 
+// Function implementing the lexicographic order
 int compLexPat(const pattern* p, const pattern* o)
 {
 	int m = o->size;

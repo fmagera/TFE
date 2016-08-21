@@ -1,3 +1,11 @@
+/*************************************************************************************************
+*
+*		test_auto.c : contains functions to compute the product of automata with
+*						transducers, used for testing
+*
+*
+**************************************************************************************************/
+
 #include "test_auto.h"
 
 automaton* test_automata(automaton* a, uint1* in, int ln, int order)
@@ -15,7 +23,6 @@ automaton* test_automata(automaton* a, uint1* in, int ln, int order)
 		auto_minimize(res);
 	}
 	
-	auto_serialize_write_dot_file(res, "test.dot", LASH_EXP_DIGIT);
 	return res;
 }
 
@@ -32,7 +39,6 @@ automaton* test_automata2 (automaton* a, uint1* in, int ln, uint1* in2, int ln2,
 	res = compose(b,1,a, 3, 3, 3);
 	res = auto_seq_projection_separ(res, 3, 0, NULL);
 	auto_minimize(res);
-	auto_serialize_write_dot_file(res, "inter.dot", LASH_EXP_DIGIT);
 
 	
 	res = compose(c,1,res, 2, 3, 2);
@@ -40,7 +46,6 @@ automaton* test_automata2 (automaton* a, uint1* in, int ln, uint1* in2, int ln2,
 	auto_minimize(res);
 	
 	
-	auto_serialize_write_dot_file(res, "test.dot", LASH_EXP_DIGIT);
 	return res;
 }
 
@@ -66,7 +71,6 @@ automaton* create_word_auto(uint1* in, int ln)
 		prev = next;
 	}
 	auto_mark_accepting_state(a, prev);
-	auto_serialize_write_dot_file(a, "word.dot", LASH_EXP_DIGIT);
 	return a;
 
 }

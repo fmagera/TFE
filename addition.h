@@ -1,3 +1,8 @@
+/*************************************************************************************************
+*
+*		addition.h : contains functions to create the simple bit by bit addition automaton 
+*
+**************************************************************************************************/
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -18,7 +23,3 @@
 automaton* normalised(int order, int alph_max);
 
 automaton* addition(uint1 alph_max);
-
-automaton* l_normalize(int order);
-
-automaton* r_normalize(int order);

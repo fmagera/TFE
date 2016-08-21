@@ -10,6 +10,12 @@ typedef struct pattern
 	int size;
 }pattern;
 
+typedef struct rule
+{
+	pattern* left;
+	pattern* right;
+}rule;
+
 typedef struct statef
 {
 	pattern* label;
@@ -17,6 +23,16 @@ typedef struct statef
 	int nb;
 }statef;
 
+typedef struct transition
+{
+	pattern* st_state;
+	pattern* en_state;
+	int input;
+	pattern* output;
+}transition;
+
+
+/* Functions to operate on patterns */
 int incPat(pattern* p, const int alph_max);
 
 pattern* append(const pattern* p, const int i);
@@ -33,38 +49,19 @@ pattern* getPrefix(const pattern* p, const int sizeOfSuffix);
 
 pattern* getSuffix(const pattern* p, const pattern* prefix);
 
-void printPattern(const pattern* p);
-
 pattern* copyPattern(const pattern* p);
 
 int getMax(const pattern* p);
 
 int getMin(const pattern* p);
 
-typedef struct rule
-{
-	pattern* left;
-	pattern* right;
-}rule;
-
+/* Print functions */
+void printPattern(const pattern* p);
 void printRule(const rule* r);
-
-rule* createRule(pattern* l, pattern* r);
-
-
-typedef struct transition
-{
-	pattern* st_state;
-	pattern* en_state;
-	int input;
-	pattern* output;
-}transition;
-
 void printTransition(const transition* t);
-
 void printStatef(statef* s);
 
-
+/* Free functions */
 void freePattern(pattern* p);
 void freeRule(rule* r);
 void freeTransition(transition* t);
