@@ -8,8 +8,8 @@ all: auto data
 auto: /home/floriane/lash/lib/lash-core.o auto.o
 	$(CC) $(ARCH32) -o auto auto.o /home/floriane/lash/lib/lash-core.o
 
-data: data.o pattern.o hashtable_r.o genData.o composition.o test_auto.o  addition.o  end_normalize.o fib_add.o /home/floriane/lash/lib/lash-core.o
-	$(CC) $(ARCH32) -o data data.o pattern.o hashtable_r.o genData.o composition.o test_auto.o addition.o end_normalize.o fib_add.o /home/floriane/lash/lib/lash-core.o -lm
+data: data.o pattern.o hashtable_r.o genData.o composition.o test_auto.o  addition.o  end_normalize.o fib_add.o base_automaton.o /home/floriane/lash/lib/lash-core.o
+	$(CC) $(ARCH32) -o data data.o pattern.o hashtable_r.o genData.o composition.o test_auto.o addition.o end_normalize.o fib_add.o base_automaton.o /home/floriane/lash/lib/lash-core.o -lm
 
 auto.o: test-lash.c
 	$(CC) $(ARCH32) $(CFLAGS) $(LASH) -o auto.o -c test-lash.c
@@ -38,7 +38,10 @@ end_normalize.o: end_normalize.c
 fib_add.o: fib_add.c
 	$(CC) $(ARCH32) $(LASH) $(CFLAGS) -std=c11 -c fib_add.c -o fib_add.o -lm
 
-data.o: post_normalization.c pattern.h hashtable_r.h genData.h composition.h test_auto.h addition.h end_normalize.h fib_add.h
+base_automaton.o: base_automaton.c
+	$(CC) $(ARCH32) $(LASH) $(CFLAGS) -std=c11 -c base_automaton.c -o base_automaton.o -lm
+
+data.o: post_normalization.c pattern.h hashtable_r.h genData.h composition.h test_auto.h addition.h end_normalize.h fib_add.h base_automaton.h
 	$(CC) $(ARCH32) $(LASH) $(CFLAGS) -std=c11 -c post_normalization.c -o data.o -lm
 
 clean:
