@@ -3,7 +3,7 @@ CFLAGS =   -W -Wall -ansi -pedantic
 LASH = -I/home/floriane/lash/src/lash-core/
 ARCH32 = -m32
 
-all: auto data
+all:  data
 
 
 data: data.o pattern.o hashtable_r.o genData.o composition.o test_auto.o  addition.o  end_normalize.o fib_add.o base_automaton.o /home/floriane/lash/lib/lash-core.o
