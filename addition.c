@@ -42,6 +42,9 @@ automaton* normalised(int order, int alph_max)
 }
 
 // petit 
+
+
+
 automaton* addition(uint1 alph_max)
 {
 	automaton* a = auto_new_empty(1);
