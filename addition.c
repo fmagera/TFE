@@ -1,7 +1,7 @@
 /*************************************************************************************************
 *
 *		addition.c : contains functions to create the simple bit by bit addition automaton 
-*
+*		author : floriane magera
 **************************************************************************************************/
 #include "addition.h"
 automaton* normalised(int order, int alph_max)
